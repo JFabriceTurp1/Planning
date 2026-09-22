@@ -47,7 +47,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 </section>
 
 <section id="vehicles" class="view">
- <div class="card"><h2 style="margin-top:0">Véhicules enregistrés</h2><div class="field"><input id="search" placeholder="Rechercher client, immatriculation, travaux…"></div><div id="vehicleList"></div></div>
+ <div class="card"><h2 style="margin-top:0">Véhicules enregistrés</h2><div class="field"><input id="search" placeholder="Rechercher client, véhicule, immatriculation, travaux…"></div><div id="vehicleList"></div></div>
 </section>
 
 <section id="settings" class="view">
@@ -70,6 +70,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 <div class="field"><label>Date</label><input id="vDate" type="date" required></div>
 <div class="field"><label>Nom du client</label><input id="vClient" autocomplete="name" required placeholder="DUPONT Jean"></div>
 <div class="field"><label>Immatriculation</label><input id="vPlate" autocapitalize="characters" required placeholder="AB-123-CD"></div>
+<div class="field"><label>Véhicule / Modèle</label><input id="vModel" required placeholder="Ex. Toyota C-HR"></div>
 <div class="field"><label>Travaux prévus</label><textarea id="vWork" required placeholder="Révision, freinage…"></textarea></div>
 <div class="field"><label>Travaux fréquents</label><div class="chips" id="workChips"></div></div>
 <div class="row"><div class="field"><label>Durée</label><select id="vDuration"><option value="0.5">½ journée</option><option value="1" selected>1 journée</option><option value="2">2 jours</option></select></div><div class="field"><label>État</label><select id="vStatus"><option value="PREVU">Prévu</option><option value="PRESENT">Présent</option><option value="TERMINE">Terminé</option></select></div></div>
@@ -114,11 +115,11 @@ function renderDay(){
  let add=$('#addVehicle'); if(add&&!add.disabled)add.addEventListener('click',()=>openForm());
  document.querySelectorAll('#dayPanel [data-edit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.edit)));
 }
-function vehicleHTML(v){return `<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button></div>`}
+function vehicleHTML(v){return `<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button></div>`}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderVehicles(){
- let q=$('#search').value.toLowerCase(),vs=[...data.vehicles].sort((a,b)=>b.date.localeCompare(a.date)).filter(v=>(v.client+' '+v.plate+' '+v.work).toLowerCase().includes(q));
- $('#vehicleList').innerHTML=vs.length?vs.map(v=>`<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.client)}</div><div class="work">${fmt(v.date)} • ${esc(v.work)}</div></div><button class="status ${v.status}" data-vedit="${v.id}">Modifier</button></div>`).join(''):'<div class="empty">Aucun véhicule.</div>';
+ let q=$('#search').value.toLowerCase(),vs=[...data.vehicles].sort((a,b)=>b.date.localeCompare(a.date)).filter(v=>(v.client+' '+v.plate+' '+(v.model||'')+' '+v.work).toLowerCase().includes(q));
+ $('#vehicleList').innerHTML=vs.length?vs.map(v=>`<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${fmt(v.date)} • ${esc(v.work)}</div></div><button class="status ${v.status}" data-vedit="${v.id}">Modifier</button></div>`).join(''):'<div class="empty">Aucun véhicule.</div>';
  document.querySelectorAll('[data-vedit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.vedit)));
 }
 function renderSettings(){
@@ -130,13 +131,13 @@ function renderSettings(){
 }
 function render(){renderCalendar();renderDay();renderVehicles();renderSettings()}
 function openForm(id){
- let v=id?data.vehicles.find(x=>x.id===id):null; $('#editId').value=v?.id||'';$('#vDate').value=v?.date||selected;$('#vClient').value=v?.client||'';$('#vPlate').value=v?.plate||'';$('#vWork').value=v?.work||'';$('#vDuration').value=String(v?.duration||1);$('#vStatus').value=v?.status||'PREVU';$('#formTitle').textContent=v?'Modifier le véhicule':'Ajouter un véhicule';
+ let v=id?data.vehicles.find(x=>x.id===id):null; $('#editId').value=v?.id||'';$('#vDate').value=v?.date||selected;$('#vClient').value=v?.client||'';$('#vPlate').value=v?.plate||'';$('#vModel').value=v?.model||'';$('#vWork').value=v?.work||'';$('#vDuration').value=String(v?.duration||1);$('#vStatus').value=v?.status||'PREVU';$('#formTitle').textContent=v?'Modifier le véhicule':'Ajouter un véhicule';
  $('#workChips').innerHTML=data.settings.works.map(w=>`<button type="button" class="chip">${esc(w)}</button>`).join('');
  document.querySelectorAll('#workChips .chip').forEach(b=>b.addEventListener('click',()=>{let t=$('#vWork');t.value=t.value.trim()?t.value.trim()+' • '+b.textContent:b.textContent;b.classList.add('on')}));
  $('#modal').classList.add('show');setTimeout(()=>$('#vClient').focus(),100)
 }
 function closeForm(){$('#modal').classList.remove('show')}
-$('#vehicleForm').addEventListener('submit',e=>{e.preventDefault();let id=$('#editId').value,obj={id:id||String(Date.now()),date:$('#vDate').value,client:$('#vClient').value.trim(),plate:$('#vPlate').value.trim().toUpperCase(),work:$('#vWork').value.trim(),duration:+$('#vDuration').value,status:$('#vStatus').value};if(!obj.date||!obj.client||!obj.plate||!obj.work)return;if(id){let i=data.vehicles.findIndex(v=>v.id===id);data.vehicles[i]=obj}else data.vehicles.push(obj);selected=obj.date;cursor=new Date(parse(selected).getFullYear(),parse(selected).getMonth(),1);save();closeForm();render()});
+$('#vehicleForm').addEventListener('submit',e=>{e.preventDefault();let id=$('#editId').value,obj={id:id||String(Date.now()),date:$('#vDate').value,client:$('#vClient').value.trim(),plate:$('#vPlate').value.trim().toUpperCase(),model:$('#vModel').value.trim(),work:$('#vWork').value.trim(),duration:+$('#vDuration').value,status:$('#vStatus').value};if(!obj.date||!obj.client||!obj.plate||!obj.model||!obj.work)return;if(id){let i=data.vehicles.findIndex(v=>v.id===id);data.vehicles[i]=obj}else data.vehicles.push(obj);selected=obj.date;cursor=new Date(parse(selected).getFullYear(),parse(selected).getMonth(),1);save();closeForm();render()});
 $('#cancelForm').addEventListener('click',closeForm);$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeForm()});
 $('#prevMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()});$('#nextMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()});
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav button,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.view).classList.add('active');render()}));
