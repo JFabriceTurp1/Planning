@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f7f9">
+<title>Planning Atelier</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#18212b;--muted:#6b7280;--line:#e5e7eb;--accent:#1769aa;--green:#dff5e5;--green2:#1f7a3f;--orange:#fff0cf;--orange2:#9a5a00;--red:#fde1e1;--red2:#a52b2b;--closed:#e8eaed}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,textarea,select{font:inherit;font-size:16px} button{min-height:44px;cursor:pointer}
+.app{max-width:920px;margin:auto;padding:calc(12px + env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 14px} h1{font-size:23px;margin:0}.sub{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.calhead button,.ghost{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 12px}.month{font-weight:750;text-transform:capitalize}
+.week,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.week{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}.grid{margin-top:6px}
+.day{position:relative;border:0;border-radius:11px;background:transparent;min-height:51px;padding:5px 2px;color:var(--text)}.day.other{opacity:.32}.day.atelier{background:var(--green)}.day.near{background:var(--orange)}.day.full{background:var(--red)}.day.closed{background:var(--closed);color:#777}.day.selected{outline:3px solid var(--accent);outline-offset:-3px}.num{display:block;font-weight:700}.load{display:block;font-size:10px;margin-top:3px;font-weight:700}.holidaydot{position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:#777}
+.daytitle{display:flex;justify-content:space-between;gap:8px;align-items:start}.daytitle h2{font-size:19px;margin:0}.badge{font-size:12px;font-weight:750;border-radius:999px;padding:6px 9px;background:#eef2f7}
+.meter{height:9px;border-radius:99px;background:#eceff2;overflow:hidden;margin:10px 0}.meter i{display:block;height:100%;background:var(--green2);width:0}.meter.near i{background:var(--orange2)}.meter.full i{background:var(--red2)}
+.vehicle{border-top:1px solid var(--line);padding:12px 0;display:flex;justify-content:space-between;gap:10px}.vehicle:first-of-type{border-top:0}.plate{font-weight:800}.client{font-weight:650;margin-top:2px}.work{color:var(--muted);font-size:14px;margin-top:3px}.status{border:0;border-radius:999px;padding:7px 9px;min-height:36px;height:36px;font-size:12px;font-weight:750;white-space:nowrap}.PREVU{background:#eef2f7}.PRESENT{background:var(--orange)}.TERMINE{background:var(--green)}
+.primary{width:100%;border:0;border-radius:14px;background:var(--accent);color:white;font-weight:750;padding:12px;margin-top:8px}.primary:disabled{opacity:.45}
+.empty{text-align:center;color:var(--muted);padding:16px 4px}.closedmsg{background:var(--closed);border-radius:12px;padding:12px;color:#5e6369;margin-top:10px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:7px max(10px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:flex;justify-content:center;z-index:5}.nav{width:min(920px,100%);display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.nav button{border:0;background:transparent;border-radius:12px;font-size:12px;color:var(--muted)}.nav button.active{background:#edf4fa;color:var(--accent);font-weight:750}
+.view{display:none}.view.active{display:block}.field{margin:11px 0}.field label{display:block;font-size:13px;font-weight:700;margin:0 0 5px}.field input,.field textarea,.field select{width:100%;border:1px solid #cfd5dc;border-radius:12px;padding:11px;background:#fff}.field textarea{min-height:82px;resize:vertical}
+.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:white;border-radius:999px;padding:7px 11px;min-height:38px}.chip.on{background:#e7f1f9;border-color:#91b9d8;color:#145989}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.danger{background:#fff;border:1px solid #efb6b6;color:#a52b2b;border-radius:12px;padding:10px}.small{font-size:12px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;z-index:10}.modal.show{display:flex}.sheet{background:var(--bg);width:100%;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}.sheetbar{width:42px;height:5px;background:#c8ccd1;border-radius:99px;margin:0 auto 10px}.sheet h2{margin:0 0 6px}.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px}.actions button{border-radius:13px;border:1px solid var(--line);padding:10px}.actions .save{background:var(--accent);color:white;border:0;font-weight:750}
+.setting{padding:12px 0;border-top:1px solid var(--line)}.setting:first-child{border-top:0}.setting h3{margin:0 0 8px;font-size:16px}
+.inline{display:flex;gap:7px;align-items:center}.inline input{min-width:0}.listline{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0}.mini{border:1px solid var(--line);background:white;border-radius:10px;min-height:36px}
+@media(min-width:700px){.maincols{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.maincols .card{margin-bottom:0}.sheet{max-width:560px;margin:auto;border-radius:22px;margin-bottom:20px}.modal{align-items:center}.day{min-height:65px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><h1>Planning Atelier</h1><div class="sub">Version locale • optimisée iPhone</div></div><div class="badge" id="todayBadge"></div></header>
+
+<section id="planning" class="view active">
+ <div class="maincols">
+  <div class="card">
+   <div class="calhead"><button id="prevMonth" aria-label="Mois précédent">‹</button><div class="month" id="monthLabel"></div><button id="nextMonth" aria-label="Mois suivant">›</button></div>
+   <div class="week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+   <div class="grid" id="calendar"></div>
+   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : fermé/vacances</div>
+  </div>
+  <div class="card" id="dayPanel"></div>
+ </div>
+</section>
+
+<section id="vehicles" class="view">
+ <div class="card"><h2 style="margin-top:0">Véhicules enregistrés</h2><div class="field"><input id="search" placeholder="Rechercher client, immatriculation, travaux…"></div><div id="vehicleList"></div></div>
+</section>
+
+<section id="settings" class="view">
+ <div class="card">
+  <h2 style="margin-top:0">Paramètres</h2>
+  <div class="setting"><h3>Capacité atelier</h3><div class="row"><div class="field"><label>Lundi</label><input id="capMon" type="number" min="1" max="30"></div><div class="field"><label>Mardi matin</label><input id="capTue" type="number" min="1" max="30"></div></div></div>
+  <div class="setting"><h3>Jours d'atelier</h3><label><input id="monOn" type="checkbox"> Lundi</label><br><label><input id="tueOn" type="checkbox"> Mardi matin</label></div>
+  <div class="setting"><h3>Travaux fréquents</h3><div id="workSettings"></div><div class="inline field"><input id="newWork" placeholder="Ex. Climatisation"><button class="mini" id="addWork">Ajouter</button></div></div>
+  <div class="setting"><h3>Vacances / fermetures</h3><div id="holidaySettings"></div><div class="row"><div class="field"><label>Début</label><input id="holStart" type="date"></div><div class="field"><label>Fin</label><input id="holEnd" type="date"></div></div><div class="inline"><input id="holName" placeholder="Nom de la période"><button class="mini" id="addHoliday">Ajouter</button></div></div>
+  <div class="setting"><h3>Données locales</h3><p class="small">Cette V1 conserve les données uniquement sur cet appareil. Firebase sera branché dans une version suivante.</p><button class="danger" id="resetData">Réinitialiser les données de démonstration</button></div>
+ </div>
+</section>
+</div>
+
+<nav class="bottom"><div class="nav"><button class="active" data-view="planning">📅<br>Planning</button><button data-view="vehicles">🚗<br>Véhicules</button><button data-view="settings">⚙️<br>Paramètres</button></div></nav>
+
+<div class="modal" id="modal"><div class="sheet"><div class="sheetbar"></div><h2 id="formTitle">Ajouter un véhicule</h2>
+<form id="vehicleForm">
+<input type="hidden" id="editId">
+<div class="field"><label>Date</label><input id="vDate" type="date" required></div>
+<div class="field"><label>Nom du client</label><input id="vClient" autocomplete="name" required placeholder="DUPONT Jean"></div>
+<div class="field"><label>Immatriculation</label><input id="vPlate" autocapitalize="characters" required placeholder="AB-123-CD"></div>
+<div class="field"><label>Travaux prévus</label><textarea id="vWork" required placeholder="Révision, freinage…"></textarea></div>
+<div class="field"><label>Travaux fréquents</label><div class="chips" id="workChips"></div></div>
+<div class="row"><div class="field"><label>Durée</label><select id="vDuration"><option value="0.5">½ journée</option><option value="1" selected>1 journée</option><option value="2">2 jours</option></select></div><div class="field"><label>État</label><select id="vStatus"><option value="PREVU">Prévu</option><option value="PRESENT">Présent</option><option value="TERMINE">Terminé</option></select></div></div>
+<div class="actions"><button type="button" id="cancelForm">Annuler</button><button class="save" type="submit">Enregistrer</button></div>
+</form></div></div>
+
+<script>
+(()=>{
+const KEY='planningAtelierV1';
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const fmt=s=>parse(s).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const defaults={settings:{capMon:6,capTue:4,monOn:true,tueOn:true,works:['Entretien','Freinage','Diagnostic','Distribution','Pneumatiques','Électricité'],holidays:[]},vehicles:[]};
+let data; try{data=JSON.parse(localStorage.getItem(KEY))||structuredClone(defaults)}catch(e){data=JSON.parse(JSON.stringify(defaults))}
+data.settings={...defaults.settings,...data.settings}; data.vehicles=data.vehicles||[];
+let selected=iso(new Date()), cursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+const $=s=>document.querySelector(s);
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function holiday(date){return data.settings.holidays.find(h=>date>=h.start&&date<=h.end)}
+function atelierInfo(s){let d=parse(s),dow=d.getDay(); if(holiday(s))return {open:false,cap:0}; if(dow===1&&data.settings.monOn)return{open:true,cap:+data.settings.capMon};if(dow===2&&data.settings.tueOn)return{open:true,cap:+data.settings.capTue};return{open:false,cap:0}}
+function vehiclesOn(s){return data.vehicles.filter(v=>v.date===s&&v.status!=='TERMINE')}
+function renderCalendar(){
+ $('#monthLabel').textContent=cursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+ let y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-((first.getDay()+6)%7));
+ let out='';
+ for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),inf=atelierInfo(s),count=vehiclesOn(s).length,h=holiday(s),cls='day '+(d.getMonth()!==m?'other ':'')+(s===selected?'selected ':'');
+ if(h)cls+='closed'; else if(inf.open){let r=count/inf.cap;cls+=r>=1?'full':r>=.75?'near':'atelier'}
+ out+=`<button class="${cls}" data-date="${s}"><span class="num">${d.getDate()}</span>${inf.open?`<span class="load">${count}/${inf.cap}</span>`:''}${h?'<i class="holidaydot"></i>':''}</button>`}
+ $('#calendar').innerHTML=out; document.querySelectorAll('.day').forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.date;render()}))
+}
+function renderDay(){
+ let inf=atelierInfo(selected),vs=data.vehicles.filter(v=>v.date===selected),active=vs.filter(v=>v.status!=='TERMINE').length,h=holiday(selected);
+ let pct=inf.cap?Math.min(100,active/inf.cap*100):0, tone=pct>=100?'full':pct>=75?'near':'';
+ let body=`<div class="daytitle"><div><h2>${fmt(selected)}</h2><div class="small">${h?h.name:(inf.open?'Journée atelier':'Pas d’atelier prévu')}</div></div>${inf.open?`<span class="badge">${active} / ${inf.cap}</span>`:''}</div>`;
+ if(inf.open) body+=`<div class="meter ${tone}"><i style="width:${pct}%"></i></div>`;
+ if(h) body+=`<div class="closedmsg">Atelier fermé — ${h.name}</div>`;
+ if(vs.length)vs.forEach(v=>body+=vehicleHTML(v)); else body+=`<div class="empty">Aucun véhicule enregistré pour cette date.</div>`;
+ body+=`<button class="primary" id="addVehicle" ${(!inf.open||h||active>=inf.cap)?'disabled':''}>＋ Ajouter un véhicule</button>`;
+ if(inf.open&&active>=inf.cap)body+=`<div class="small" style="text-align:center;margin-top:7px">Capacité atteinte.</div>`;
+ $('#dayPanel').innerHTML=body;
+ let add=$('#addVehicle'); if(add&&!add.disabled)add.addEventListener('click',()=>openForm());
+ document.querySelectorAll('#dayPanel [data-edit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.edit)));
+}
+function vehicleHTML(v){return `<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button></div>`}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderVehicles(){
+ let q=$('#search').value.toLowerCase(),vs=[...data.vehicles].sort((a,b)=>b.date.localeCompare(a.date)).filter(v=>(v.client+' '+v.plate+' '+v.work).toLowerCase().includes(q));
+ $('#vehicleList').innerHTML=vs.length?vs.map(v=>`<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.client)}</div><div class="work">${fmt(v.date)} • ${esc(v.work)}</div></div><button class="status ${v.status}" data-vedit="${v.id}">Modifier</button></div>`).join(''):'<div class="empty">Aucun véhicule.</div>';
+ document.querySelectorAll('[data-vedit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.vedit)));
+}
+function renderSettings(){
+ $('#capMon').value=data.settings.capMon;$('#capTue').value=data.settings.capTue;$('#monOn').checked=data.settings.monOn;$('#tueOn').checked=data.settings.tueOn;
+ $('#workSettings').innerHTML=data.settings.works.map((w,i)=>`<div class="listline"><span>${esc(w)}</span><button class="mini" data-delwork="${i}">×</button></div>`).join('');
+ document.querySelectorAll('[data-delwork]').forEach(b=>b.addEventListener('click',()=>{data.settings.works.splice(+b.dataset.delwork,1);save();render()}));
+ $('#holidaySettings').innerHTML=data.settings.holidays.length?data.settings.holidays.map((h,i)=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start} → ${h.end}</span></span><button class="mini" data-delhol="${i}">×</button></div>`).join(''):'<div class="small">Aucune période enregistrée. Les vacances de La Réunion pourront être ajoutées ici.</div>';
+ document.querySelectorAll('[data-delhol]').forEach(b=>b.addEventListener('click',()=>{data.settings.holidays.splice(+b.dataset.delhol,1);save();render()}));
+}
+function render(){renderCalendar();renderDay();renderVehicles();renderSettings()}
+function openForm(id){
+ let v=id?data.vehicles.find(x=>x.id===id):null; $('#editId').value=v?.id||'';$('#vDate').value=v?.date||selected;$('#vClient').value=v?.client||'';$('#vPlate').value=v?.plate||'';$('#vWork').value=v?.work||'';$('#vDuration').value=String(v?.duration||1);$('#vStatus').value=v?.status||'PREVU';$('#formTitle').textContent=v?'Modifier le véhicule':'Ajouter un véhicule';
+ $('#workChips').innerHTML=data.settings.works.map(w=>`<button type="button" class="chip">${esc(w)}</button>`).join('');
+ document.querySelectorAll('#workChips .chip').forEach(b=>b.addEventListener('click',()=>{let t=$('#vWork');t.value=t.value.trim()?t.value.trim()+' • '+b.textContent:b.textContent;b.classList.add('on')}));
+ $('#modal').classList.add('show');setTimeout(()=>$('#vClient').focus(),100)
+}
+function closeForm(){$('#modal').classList.remove('show')}
+$('#vehicleForm').addEventListener('submit',e=>{e.preventDefault();let id=$('#editId').value,obj={id:id||String(Date.now()),date:$('#vDate').value,client:$('#vClient').value.trim(),plate:$('#vPlate').value.trim().toUpperCase(),work:$('#vWork').value.trim(),duration:+$('#vDuration').value,status:$('#vStatus').value};if(!obj.date||!obj.client||!obj.plate||!obj.work)return;if(id){let i=data.vehicles.findIndex(v=>v.id===id);data.vehicles[i]=obj}else data.vehicles.push(obj);selected=obj.date;cursor=new Date(parse(selected).getFullYear(),parse(selected).getMonth(),1);save();closeForm();render()});
+$('#cancelForm').addEventListener('click',closeForm);$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeForm()});
+$('#prevMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()});$('#nextMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()});
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav button,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.view).classList.add('active');render()}));
+$('#search').addEventListener('input',renderVehicles);
+['capMon','capTue'].forEach(id=>$('#'+id).addEventListener('change',e=>{data.settings[id]=Math.max(1,+e.target.value||1);save();render()}));
+$('#monOn').addEventListener('change',e=>{data.settings.monOn=e.target.checked;save();render()});$('#tueOn').addEventListener('change',e=>{data.settings.tueOn=e.target.checked;save();render()});
+$('#addWork').addEventListener('click',()=>{let w=$('#newWork').value.trim();if(w&&!data.settings.works.includes(w)){data.settings.works.push(w);$('#newWork').value='';save();render()}});
+$('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
+$('#resetData').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les données locales ?')){data=JSON.parse(JSON.stringify(defaults));save();render()}});
+$('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});render();
+})();
+</script>
+</body></html>
