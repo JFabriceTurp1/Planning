@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f6f7f9">
 <title>Planning Atelier</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--text:#18212b;--muted:#6b7280;--line:#e5e7eb;--accent:#1769aa;--green:#dff5e5;--green2:#1f7a3f;--orange:#fff0cf;--orange2:#9a5a00;--red:#fde1e1;--red2:#a52b2b;--closed:#e8eaed}
+:root{--bg:#f5f6f8;--card:#fff;--text:#18212b;--muted:#6b7280;--line:#e5e7eb;--accent:#1769aa;--green:#dff5e5;--green2:#1f7a3f;--orange:#fff0cf;--orange2:#9a5a00;--red:#fde1e1;--red2:#a52b2b;--closed:#e8eaed;--vac:#e4e7eb;--holiday:#dde7f3;--custom:#eadcf7}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 button,input,textarea,select{font:inherit;font-size:16px} button{min-height:44px;cursor:pointer}
 .app{max-width:920px;margin:auto;padding:calc(12px + env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom))}
@@ -14,7 +14,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.calhead button,.ghost{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 12px}.month{font-weight:750;text-transform:capitalize}
 .week,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.week{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}.grid{margin-top:6px}
-.day{position:relative;border:0;border-radius:11px;background:transparent;min-height:51px;padding:5px 2px;color:var(--text)}.day.other{opacity:.32}.day.atelier{background:var(--green)}.day.near{background:var(--orange)}.day.full{background:var(--red)}.day.closed{background:var(--closed);color:#777}.day.selected{outline:3px solid var(--accent);outline-offset:-3px}.num{display:block;font-weight:700}.load{display:block;font-size:10px;margin-top:3px;font-weight:700}.holidaydot{position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:#777}
+.day{position:relative;border:0;border-radius:11px;background:transparent;min-height:51px;padding:5px 2px;color:var(--text)}.day.other{opacity:.32}.day.atelier{background:var(--green)}.day.near{background:var(--orange)}.day.full{background:var(--red)}.day.closed{background:var(--closed);color:#777}.day.vacation{background:var(--vac);color:#666}.day.publicholiday{background:var(--holiday);color:#425b76}.day.customclosed{background:var(--custom);color:#65407d}.day.selected{outline:3px solid var(--accent);outline-offset:-3px}.num{display:block;font-weight:700}.load{display:block;font-size:10px;margin-top:3px;font-weight:700}.holidaydot{position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:#777}
 .daytitle{display:flex;justify-content:space-between;gap:8px;align-items:start}.daytitle h2{font-size:19px;margin:0}.badge{font-size:12px;font-weight:750;border-radius:999px;padding:6px 9px;background:#eef2f7}
 .meter{height:9px;border-radius:99px;background:#eceff2;overflow:hidden;margin:10px 0}.meter i{display:block;height:100%;background:var(--green2);width:0}.meter.near i{background:var(--orange2)}.meter.full i{background:var(--red2)}
 .vehicle{border-top:1px solid var(--line);padding:12px 8px;display:flex;justify-content:space-between;gap:10px;border-radius:12px}.vehicle.parts-wait{background:var(--orange)}.vehicle.parts-ok{background:var(--green)}.vehicle:first-of-type{border-top:0}.plate{font-weight:800}.client{font-weight:650;margin-top:2px}.work{color:var(--muted);font-size:14px;margin-top:3px}.status{border:0;border-radius:999px;padding:7px 9px;min-height:36px;height:36px;font-size:12px;font-weight:750;white-space:nowrap}.PREVU{background:#eef2f7}.PRESENT{background:var(--orange)}.TERMINE{background:var(--green)}
@@ -40,7 +40,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
    <div class="calhead"><button id="prevMonth" aria-label="Mois précédent">‹</button><div class="month" id="monthLabel"></div><button id="nextMonth" aria-label="Mois suivant">›</button></div>
    <div class="week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
    <div class="grid" id="calendar"></div>
-   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : vacances / jour férié / fermeture</div>
+   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : vacances/week-end • bleu-gris : jour férié • violet : fermeture manuelle</div>
   </div>
   <div class="card" id="dayPanel"></div>
  </div>
@@ -166,8 +166,10 @@ function save(){
   },350);
 }
 function holiday(date){
-  return OFFICIAL_CLOSURES.find(h=>date>=h.start&&date<=h.end)
-      || data.settings.holidays.find(h=>date>=h.start&&date<=h.end);
+  const official=OFFICIAL_CLOSURES.find(h=>date>=h.start&&date<=h.end);
+  if(official) return {...official,source:'official'};
+  const custom=data.settings.holidays.find(h=>date>=h.start&&date<=h.end);
+  return custom ? {...custom,type:'custom',source:'custom'} : null;
 }
 function atelierInfo(s){let d=parse(s),dow=d.getDay(); if(holiday(s))return {open:false,cap:0}; if(dow===1&&data.settings.monOn)return{open:true,cap:+data.settings.capMon};if(dow===2&&data.settings.tueOn)return{open:true,cap:+data.settings.capTue};return{open:false,cap:0}}
 function vehiclesOn(s){return data.vehicles.filter(v=>v.date===s&&v.status!=='TERMINE')}
@@ -175,8 +177,8 @@ function renderCalendar(){
  $('#monthLabel').textContent=cursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
  let y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-((first.getDay()+6)%7));
  let out='';
- for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),inf=atelierInfo(s),count=vehiclesOn(s).length,h=holiday(s),cls='day '+(d.getMonth()!==m?'other ':'')+(s===selected?'selected ':'');
- if(h)cls+='closed'; else if(inf.open){let r=count/inf.cap;cls+=r>=1?'full':r>=.75?'near':'atelier'}
+ for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),inf=atelierInfo(s),count=vehiclesOn(s).length,h=holiday(s),cls='day '+(d.getMonth()!==m?'other ':'')+(s===selected?'selected ':'')+((d.getDay()===0||d.getDay()===6)&&!h?'closed ':'');
+ if(h){cls+=h.type==='custom'?'customclosed':(h.type==='ferie'?'publicholiday':'vacation')} else if(inf.open){let r=count/inf.cap;cls+=r>=1?'full':r>=.75?'near':'atelier'}
  out+=`<button class="${cls}" data-date="${s}"><span class="num">${d.getDate()}</span>${inf.open?`<span class="load">${count}/${inf.cap}</span>`:''}${h?'<i class="holidaydot"></i>':''}</button>`}
  $('#calendar').innerHTML=out; document.querySelectorAll('.day').forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.date;render()}))
 }
@@ -185,7 +187,7 @@ function renderDay(){
  let pct=inf.cap?Math.min(100,active/inf.cap*100):0, tone=pct>=100?'full':pct>=75?'near':'';
  let body=`<div class="daytitle"><div><h2>${fmt(selected)}</h2><div class="small">${h?h.name:(inf.open?'Journée atelier':'Pas d’atelier prévu')}</div></div>${inf.open?`<span class="badge">${active} / ${inf.cap}</span>`:''}</div>`;
  if(inf.open) body+=`<div class="meter ${tone}"><i style="width:${pct}%"></i></div>`;
- if(h) body+=`<div class="closedmsg">🚫 Aucun rendez-vous possible — ${h.name}</div>`;
+ if(h) body+=`<div class="closedmsg" style="${h.type==='custom'?'background:var(--custom)':h.type==='ferie'?'background:var(--holiday)':'background:var(--vac)'}">🚫 Aucun rendez-vous possible — ${h.name}${h.type==='custom'?' (fermeture manuelle)':''}</div>`;
  if(vs.length)vs.forEach(v=>body+=vehicleHTML(v)); else body+=`<div class="empty">Aucun véhicule enregistré pour cette date.</div>`;
  body+=`<button class="primary" id="addVehicle" ${(!inf.open||h||active>=inf.cap)?'disabled':''}>＋ Ajouter un véhicule</button>`;
  if(inf.open&&active>=inf.cap)body+=`<div class="small" style="text-align:center;margin-top:7px">Capacité atteinte.</div>`;
@@ -236,7 +238,7 @@ $('#search').addEventListener('input',renderVehicles);
 ['capMon','capTue'].forEach(id=>$('#'+id).addEventListener('change',e=>{data.settings[id]=Math.max(1,+e.target.value||1);save();render()}));
 $('#monOn').addEventListener('change',e=>{data.settings.monOn=e.target.checked;save();render()});$('#tueOn').addEventListener('change',e=>{data.settings.tueOn=e.target.checked;save();render()});
 $('#addWork').addEventListener('click',()=>{let w=$('#newWork').value.trim();if(w&&!data.settings.works.includes(w)){data.settings.works.push(w);$('#newWork').value='';save();render()}});
-$('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
+$('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name,type:'custom'});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
 $('#resetData').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les données locales ?')){data=JSON.parse(JSON.stringify(defaults));save();render()}});
 $('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
 
