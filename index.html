@@ -40,7 +40,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
    <div class="calhead"><button id="prevMonth" aria-label="Mois précédent">‹</button><div class="month" id="monthLabel"></div><button id="nextMonth" aria-label="Mois suivant">›</button></div>
    <div class="week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
    <div class="grid" id="calendar"></div>
-   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : fermé/vacances</div>
+   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : vacances / jour férié / fermeture</div>
   </div>
   <div class="card" id="dayPanel"></div>
  </div>
@@ -56,7 +56,11 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
   <div class="setting"><h3>Capacité atelier</h3><div class="row"><div class="field"><label>Lundi</label><input id="capMon" type="number" min="1" max="30"></div><div class="field"><label>Mardi matin</label><input id="capTue" type="number" min="1" max="30"></div></div></div>
   <div class="setting"><h3>Jours d'atelier</h3><label><input id="monOn" type="checkbox"> Lundi</label><br><label><input id="tueOn" type="checkbox"> Mardi matin</label></div>
   <div class="setting"><h3>Travaux fréquents</h3><div id="workSettings"></div><div class="inline field"><input id="newWork" placeholder="Ex. Climatisation"><button class="mini" id="addWork">Ajouter</button></div></div>
-  <div class="setting"><h3>Vacances / fermetures</h3><div id="holidaySettings"></div><div class="row"><div class="field"><label>Début</label><input id="holStart" type="date"></div><div class="field"><label>Fin</label><input id="holEnd" type="date"></div></div><div class="inline"><input id="holName" placeholder="Nom de la période"><button class="mini" id="addHoliday">Ajouter</button></div></div>
+  <div class="setting"><h3>Calendrier officiel — La Réunion</h3>
+  <p class="small">Vacances scolaires 2026-2027 et jours fériés intégrés automatiquement. Ces dates bloquent la prise de rendez-vous.</p>
+  <div id="officialHolidaySettings"></div>
+ </div>
+ <div class="setting"><h3>Fermetures personnalisées</h3><div id="holidaySettings"></div><div class="row"><div class="field"><label>Début</label><input id="holStart" type="date"></div><div class="field"><label>Fin</label><input id="holEnd" type="date"></div></div><div class="inline"><input id="holName" placeholder="Nom de la période"><button class="mini" id="addHoliday">Ajouter</button></div></div>
   <div class="setting"><h3>Données locales</h3><p class="small">Cette V1 conserve les données uniquement sur cet appareil. Firebase sera branché dans une version suivante.</p><button class="danger" id="resetData">Réinitialiser les données de démonstration</button></div>
  </div>
 </section>
@@ -100,6 +104,33 @@ const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const fmt=s=>parse(s).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const defaults={settings:{capMon:6,capTue:4,monOn:true,tueOn:true,works:['Entretien','Freinage','Diagnostic','Distribution','Pneumatiques','Électricité'],holidays:[]},vehicles:[]};
+// Fermetures officielles intégrées pour l'académie de La Réunion.
+// Les dates de fin des vacances correspondent au dernier jour sans cours
+// (la reprise officielle a lieu le lendemain matin).
+const OFFICIAL_CLOSURES = [
+  {start:'2026-10-10',end:'2026-10-25',name:"Vacances après la 1re période",type:'vacances'},
+  {start:'2026-12-19',end:'2027-01-31',name:"Vacances de l’été austral",type:'vacances'},
+  {start:'2027-03-16',end:'2027-03-29',name:"Vacances après la 3e période",type:'vacances'},
+  {start:'2027-05-05',end:'2027-05-18',name:"Vacances après la 4e période",type:'vacances'},
+  {start:'2027-07-03',end:'2027-08-31',name:"Vacances d’hiver austral / fin d’année scolaire",type:'vacances'},
+
+  {start:'2026-11-01',end:'2026-11-01',name:'Toussaint',type:'ferie'},
+  {start:'2026-11-11',end:'2026-11-11',name:'Armistice 1918',type:'ferie'},
+  {start:'2026-12-20',end:'2026-12-20',name:"Abolition de l’esclavage — La Réunion",type:'ferie'},
+  {start:'2026-12-25',end:'2026-12-25',name:'Noël',type:'ferie'},
+  {start:'2027-01-01',end:'2027-01-01',name:"Jour de l’An",type:'ferie'},
+  {start:'2027-03-29',end:'2027-03-29',name:'Lundi de Pâques',type:'ferie'},
+  {start:'2027-05-01',end:'2027-05-01',name:'Fête du Travail',type:'ferie'},
+  {start:'2027-05-06',end:'2027-05-06',name:'Ascension',type:'ferie'},
+  {start:'2027-05-08',end:'2027-05-08',name:'Victoire 1945',type:'ferie'},
+  {start:'2027-05-17',end:'2027-05-17',name:'Lundi de Pentecôte',type:'ferie'},
+  {start:'2027-07-14',end:'2027-07-14',name:'Fête nationale',type:'ferie'},
+  {start:'2027-08-15',end:'2027-08-15',name:'Assomption',type:'ferie'},
+  {start:'2027-11-01',end:'2027-11-01',name:'Toussaint',type:'ferie'},
+  {start:'2027-11-11',end:'2027-11-11',name:'Armistice 1918',type:'ferie'},
+  {start:'2027-12-20',end:'2027-12-20',name:"Abolition de l’esclavage — La Réunion",type:'ferie'},
+  {start:'2027-12-25',end:'2027-12-25',name:'Noël',type:'ferie'}
+];
 let data; try{data=JSON.parse(localStorage.getItem(KEY))||structuredClone(defaults)}catch(e){data=JSON.parse(JSON.stringify(defaults))}
 data.settings={...defaults.settings,...data.settings}; data.vehicles=data.vehicles||[];
 let selected=iso(new Date()), cursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -125,7 +156,10 @@ function save(){
     }
   },350);
 }
-function holiday(date){return data.settings.holidays.find(h=>date>=h.start&&date<=h.end)}
+function holiday(date){
+  return OFFICIAL_CLOSURES.find(h=>date>=h.start&&date<=h.end)
+      || data.settings.holidays.find(h=>date>=h.start&&date<=h.end);
+}
 function atelierInfo(s){let d=parse(s),dow=d.getDay(); if(holiday(s))return {open:false,cap:0}; if(dow===1&&data.settings.monOn)return{open:true,cap:+data.settings.capMon};if(dow===2&&data.settings.tueOn)return{open:true,cap:+data.settings.capTue};return{open:false,cap:0}}
 function vehiclesOn(s){return data.vehicles.filter(v=>v.date===s&&v.status!=='TERMINE')}
 function renderCalendar(){
@@ -142,7 +176,7 @@ function renderDay(){
  let pct=inf.cap?Math.min(100,active/inf.cap*100):0, tone=pct>=100?'full':pct>=75?'near':'';
  let body=`<div class="daytitle"><div><h2>${fmt(selected)}</h2><div class="small">${h?h.name:(inf.open?'Journée atelier':'Pas d’atelier prévu')}</div></div>${inf.open?`<span class="badge">${active} / ${inf.cap}</span>`:''}</div>`;
  if(inf.open) body+=`<div class="meter ${tone}"><i style="width:${pct}%"></i></div>`;
- if(h) body+=`<div class="closedmsg">Atelier fermé — ${h.name}</div>`;
+ if(h) body+=`<div class="closedmsg">🚫 Aucun rendez-vous possible — ${h.name}</div>`;
  if(vs.length)vs.forEach(v=>body+=vehicleHTML(v)); else body+=`<div class="empty">Aucun véhicule enregistré pour cette date.</div>`;
  body+=`<button class="primary" id="addVehicle" ${(!inf.open||h||active>=inf.cap)?'disabled':''}>＋ Ajouter un véhicule</button>`;
  if(inf.open&&active>=inf.cap)body+=`<div class="small" style="text-align:center;margin-top:7px">Capacité atteinte.</div>`;
@@ -161,7 +195,8 @@ function renderSettings(){
  $('#capMon').value=data.settings.capMon;$('#capTue').value=data.settings.capTue;$('#monOn').checked=data.settings.monOn;$('#tueOn').checked=data.settings.tueOn;
  $('#workSettings').innerHTML=data.settings.works.map((w,i)=>`<div class="listline"><span>${esc(w)}</span><button class="mini" data-delwork="${i}">×</button></div>`).join('');
  document.querySelectorAll('[data-delwork]').forEach(b=>b.addEventListener('click',()=>{data.settings.works.splice(+b.dataset.delwork,1);save();render()}));
- $('#holidaySettings').innerHTML=data.settings.holidays.length?data.settings.holidays.map((h,i)=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start} → ${h.end}</span></span><button class="mini" data-delhol="${i}">×</button></div>`).join(''):'<div class="small">Aucune période enregistrée. Les vacances de La Réunion pourront être ajoutées ici.</div>';
+ $('#officialHolidaySettings').innerHTML=OFFICIAL_CLOSURES.map(h=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start}${h.end!==h.start?' → '+h.end:''}</span></span><span class="badge">${h.type==='ferie'?'Férié':'Vacances'}</span></div>`).join('');
+ $('#holidaySettings').innerHTML=data.settings.holidays.length?data.settings.holidays.map((h,i)=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start} → ${h.end}</span></span><button class="mini" data-delhol="${i}">×</button></div>`).join(''):'<div class="small">Aucune fermeture personnalisée enregistrée.</div>';
  document.querySelectorAll('[data-delhol]').forEach(b=>b.addEventListener('click',()=>{data.settings.holidays.splice(+b.dataset.delhol,1);save();render()}));
 }
 function render(){renderCalendar();renderDay();renderVehicles();renderSettings()}
