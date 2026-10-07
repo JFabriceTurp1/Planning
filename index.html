@@ -32,7 +32,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 </head>
 <body>
 <div class="app">
-<header><div><h1>Planning Atelier</h1><div class="sub">Version locale • optimisée iPhone</div></div><div class="badge" id="todayBadge"></div></header>
+<header><div><h1>Planning Atelier</h1><div class="sub">Firebase multiposte • optimisée iPhone</div><div class="small" id="syncState">Connexion Firebase…</div></div><div class="badge" id="todayBadge"></div></header>
 
 <section id="planning" class="view active">
  <div class="maincols">
@@ -77,7 +77,22 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 <div class="actions"><button type="button" id="cancelForm">Annuler</button><button class="save" type="submit">Enregistrer</button></div>
 </form></div></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN9ZurC1Diqj900KZ4IMVLIBUuGM15r5c",
+  authDomain: "planning-atelier-3676c.firebaseapp.com",
+  projectId: "planning-atelier-3676c",
+  storageBucket: "planning-atelier-3676c.firebasestorage.app",
+  messagingSenderId: "623371806091",
+  appId: "1:623371806091:web:0989270b6fe8bcc1eb3b8e"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const cloudRef = doc(db, "planning_atelier", "donnees");
+
 (()=>{
 const KEY='planningAtelierV1';
 const pad=n=>String(n).padStart(2,'0');
@@ -89,7 +104,27 @@ let data; try{data=JSON.parse(localStorage.getItem(KEY))||structuredClone(defaul
 data.settings={...defaults.settings,...data.settings}; data.vehicles=data.vehicles||[];
 let selected=iso(new Date()), cursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 const $=s=>document.querySelector(s);
-function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+let cloudReady=false, applyingCloud=false, saveTimer=null;
+function setSync(msg){ const el=$('#syncState'); if(el) el.textContent=msg; }
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(data));
+  if(!cloudReady || applyingCloud) return;
+  clearTimeout(saveTimer);
+  setSync("Synchronisation…");
+  saveTimer=setTimeout(async()=>{
+    try{
+      await setDoc(cloudRef,{
+        settings:data.settings,
+        vehicles:data.vehicles,
+        updatedAt:new Date().toISOString()
+      });
+      setSync("✓ Synchronisé");
+    }catch(err){
+      console.error(err);
+      setSync("⚠ Hors ligne — copie locale conservée");
+    }
+  },350);
+}
 function holiday(date){return data.settings.holidays.find(h=>date>=h.start&&date<=h.end)}
 function atelierInfo(s){let d=parse(s),dow=d.getDay(); if(holiday(s))return {open:false,cap:0}; if(dow===1&&data.settings.monOn)return{open:true,cap:+data.settings.capMon};if(dow===2&&data.settings.tueOn)return{open:true,cap:+data.settings.capTue};return{open:false,cap:0}}
 function vehiclesOn(s){return data.vehicles.filter(v=>v.date===s&&v.status!=='TERMINE')}
@@ -147,7 +182,45 @@ $('#monOn').addEventListener('change',e=>{data.settings.monOn=e.target.checked;s
 $('#addWork').addEventListener('click',()=>{let w=$('#newWork').value.trim();if(w&&!data.settings.works.includes(w)){data.settings.works.push(w);$('#newWork').value='';save();render()}});
 $('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
 $('#resetData').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les données locales ?')){data=JSON.parse(JSON.stringify(defaults));save();render()}});
-$('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});render();
+$('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+
+onSnapshot(cloudRef, async snap=>{
+  try{
+    applyingCloud=true;
+    if(snap.exists()){
+      const remote=snap.data();
+      data={
+        settings:{...defaults.settings,...(remote.settings||{})},
+        vehicles:Array.isArray(remote.vehicles)?remote.vehicles:[]
+      };
+      localStorage.setItem(KEY,JSON.stringify(data));
+      cloudReady=true;
+      setSync("✓ Synchronisé");
+      render();
+    }else{
+      cloudReady=true;
+      setSync("Initialisation Firebase…");
+      await setDoc(cloudRef,{
+        settings:data.settings,
+        vehicles:data.vehicles,
+        updatedAt:new Date().toISOString()
+      });
+      setSync("✓ Synchronisé");
+    }
+  }catch(err){
+    console.error(err);
+    setSync("⚠ Firebase indisponible — mode local");
+  }finally{
+    applyingCloud=false;
+  }
+},err=>{
+  console.error(err);
+  cloudReady=false;
+  setSync("⚠ Firebase indisponible — mode local");
+  render();
+});
+
+render();
 })();
 </script>
 </body></html>
