@@ -52,7 +52,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
 
 <section id="parts" class="view">
  <div class="card">
-  <div class="daytitle"><div><h2>📦 Approvisionnements</h2><div class="small">Dossiers nécessitant des pièces détachées</div></div><span class="badge" id="partsCount">0 à vérifier</span></div>
+  <div class="daytitle"><div><h2>📦 Approvisionnements</h2><div class="small">Validation des pièces et remise en contrôle possible à tout moment</div></div><span class="badge" id="partsCount">0 à vérifier</span></div>
   <div class="chips" style="margin:12px 0"><button type="button" class="chip on" id="partsPending">À vérifier</button><button type="button" class="chip" id="partsAll">Tous</button></div>
   <div id="partsList"></div>
  </div>
@@ -206,8 +206,8 @@ function renderParts(){
  const pending=all.filter(v=>!v.partsOK), shown=partsShowAll?all:pending;
  $('#partsCount').textContent=pending.length+' à vérifier';
  $('#partsPending').classList.toggle('on',!partsShowAll); $('#partsAll').classList.toggle('on',partsShowAll);
- $('#partsList').innerHTML=shown.length?shown.map(v=>`<div class="vehicle ${v.partsOK?'parts-ok':'parts-wait'}"><div style="min-width:0"><div class="plate">${esc(v.plate)} • ${esc(v.model||'')}</div><div class="client">${esc(v.client)} — ${fmt(v.date)}</div><div class="work">${esc(v.work)}</div><div style="margin-top:8px"><b>Pièces :</b> ${esc(v.partsList||'Liste non renseignée')}</div></div><button class="status ${v.partsOK?'TERMINE':'PRESENT'}" data-partsok="${v.id}">${v.partsOK?'✓ PIÈCES OK':'PIÈCES OK'}</button></div>`).join(''):'<div class="empty">Aucun dossier à traiter.</div>';
- document.querySelectorAll('[data-partsok]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.partsok);if(!v)return;if(v.partsOK){if(!confirm('Annuler la validation PIÈCES OK ?'))return;v.partsOK=false}else v.partsOK=true;save();render()}));
+ $('#partsList').innerHTML=shown.length?shown.map(v=>`<div class="vehicle ${v.partsOK?'parts-ok':'parts-wait'}"><div style="min-width:0"><div class="plate">${esc(v.plate)} • ${esc(v.model||'')}</div><div class="client">${esc(v.client)} — ${fmt(v.date)}</div><div class="work">${esc(v.work)}</div><div style="margin-top:8px"><b>Pièces :</b> ${esc(v.partsList||'Liste non renseignée')}</div></div><button class="status ${v.partsOK?'TERMINE':'PRESENT'}" data-partsok="${v.id}">${v.partsOK?'↩ À RECONTRÔLER':'✓ PIÈCES OK'}</button></div>`).join(''):'<div class="empty">Aucun dossier à traiter.</div>';
+ document.querySelectorAll('[data-partsok]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.partsok);if(!v)return;if(v.partsOK){if(!confirm('Repasser ce dossier en PIÈCES À CONTRÔLER ?'))return;v.partsOK=false}else v.partsOK=true;save();render()}));
 }
 function renderSettings(){
  $('#capMon').value=data.settings.capMon;$('#capTue').value=data.settings.capTue;$('#monOn').checked=data.settings.monOn;$('#tueOn').checked=data.settings.tueOn;
