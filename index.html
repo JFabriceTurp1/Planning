@@ -17,7 +17,7 @@
 <div class="modal" id="modal"><div class="sheet"><div class="row"><h2 id="modalTitle">Fiche</h2><button class="secondary" id="closeModal">Fermer</button></div><form id="form"><div id="formFields"></div><div class="row"><button type="button" class="danger hidden" id="deleteEntry">Supprimer</button><button type="submit" class="primary">Enregistrer</button></div></form></div></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import {getFirestore,doc,collection,onSnapshot,getDoc,getDocs,setDoc,updateDoc,deleteDoc,writeBatch,serverTimestamp,query,where} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 const firebaseConfig = {
   apiKey: "AIzaSyDN9ZurC1Diqj900KZ4IMVLIBUuGM15r5c",
@@ -73,8 +73,37 @@ async function signed(user){cleanup();me=user;$('#login').classList.toggle('hidd
  watch(doc(db,'config','atelier'),snap=>{settings={...defaults,...(snap.exists()?snap.data():{})};render()});}
  if(role==='admin')watch(collection(db,'users'),snap=>{users=snap.docs.map(d=>({id:d.id,...d.data()}));renderUsers()});
  notify('✓ Connecté · '+({admin:'Administrateur',teacher:'Enseignant',parts:'Approvisionnements'}[role]));}
-$('#loginBtn').onclick=async()=>{try{if(/iPhone|iPad|iPod/.test(navigator.userAgent))await signInWithRedirect(auth,provider);else await signInWithPopup(auth,provider)}catch(e){$('#loginError').textContent=e.message;$('#loginError').classList.remove('hidden')}};
-getRedirectResult(auth).catch(e=>{notify('Connexion Google : '+e.message,true)});onAuthStateChanged(auth,signed);$('#logout').onclick=()=>signOut(auth);$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+// V8.4 : sur GitHub Pages, éviter signInWithRedirect sur Safari iOS :
+// le retour depuis firebaseapp.com peut perdre l'état d'authentification.
+// Le popup est lancé directement depuis le clic utilisateur (indispensable sur iOS).
+$('#loginBtn').onclick=async()=>{
+ const button=$('#loginBtn'),error=$('#loginError');
+ button.disabled=true;button.textContent='Connexion Google en cours…';
+ error.classList.add('hidden');error.textContent='';
+ try{
+   const result=await signInWithPopup(auth,provider);
+   if(!result.user)throw new Error('Google n’a pas retourné de compte utilisateur.');
+   notify('Compte Google reconnu · vérification des autorisations…');
+ }catch(e){
+   console.error('Connexion Google',e);
+   const help={
+     'auth/popup-blocked':'Safari a bloqué la fenêtre Google. Autorisez les fenêtres surgissantes pour ce site, puis réessayez.',
+     'auth/popup-closed-by-user':'La fenêtre Google a été fermée avant la fin de la connexion.',
+     'auth/cancelled-popup-request':'Une autre tentative de connexion a interrompu celle-ci.',
+     'auth/unauthorized-domain':'Le domaine GitHub Pages doit être ajouté dans Firebase Authentication > Paramètres > Domaines autorisés.',
+     'auth/operation-not-supported-in-this-environment':'Ouvrez le planning directement dans Safari, et non dans un navigateur intégré à une autre application.',
+     'auth/network-request-failed':'Connexion réseau impossible. Vérifiez la connexion Internet.'
+   };
+   error.textContent=(help[e.code]||'Connexion impossible : '+(e.message||'erreur inconnue'))+(e.code?' ['+e.code+']':'');
+   error.classList.remove('hidden');notify('Connexion Google non terminée',true);
+ }finally{button.disabled=false;button.textContent='Se connecter avec Google'}
+};
+onAuthStateChanged(auth,signed,e=>{
+ console.error('État Firebase Authentication',e);
+ $('#loginError').textContent='Erreur de session Firebase : '+e.message;
+ $('#loginError').classList.remove('hidden');notify('Erreur de session Firebase',true);
+});
+$('#logout').onclick=()=>signOut(auth);$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
 function closed(s){let c=(settings.holidays||[]).find(x=>s>=x.start&&s<=x.end);if(c)return {...c,type:'custom'};return OFFICIAL_CLOSURES.find(x=>s>=x.start&&s<=x.end)||null}
 function dayInfo(s){let d=parse(s),n=d.getDay(),c=closed(s),keys={1:['monOn','capMon'],2:['tueOn','capTue'],3:['wedOn','capWed'],4:['thuOn','capThu'],5:['friOn','capFri']},k=keys[n],open=!c&&!!k&&!!settings[k[0]],cap=k?+settings[k[1]]:0;let count=appointments.filter(a=>a.date===s&&a.status!=='TERMINE').length;return {open,cap,count,c}}
 function renderCalendar(){let y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-((first.getDay()+6)%7));$('#month').textContent=first.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});$('#week').innerHTML=['L','M','M','J','V','S','D'].map(x=>`<span class="week">${x}</span>`).join('');let h='';for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),info=dayInfo(s),c=info.c,kind=c?(c.type==='custom'?'custom':c.type==='ferie'?'ferie':'vac'):(info.open?(info.count>=info.cap?'full':info.count/info.cap>=.75?'busy':'on'):'vac');h+=`<button class="day ${kind} ${s===selected?'selected':''}" data-day="${s}" style="${d.getMonth()!==m?'opacity:.35':''}"><b>${d.getDate()}</b><br><small>${info.open?info.count+'/'+info.cap:''}</small></button>`}$('#calendar').innerHTML=h;$$('[data-day]').forEach(b=>b.onclick=()=>{selected=b.dataset.day;render()})}
