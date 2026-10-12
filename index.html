@@ -68,7 +68,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin:4px 
   <div id="officialHolidaySettings"></div>
  </div>
  <div class="setting"><h3>Fermetures personnalisées</h3><div id="holidaySettings"></div><div class="row"><div class="field"><label>Début</label><input id="holStart" type="date"></div><div class="field"><label>Fin</label><input id="holEnd" type="date"></div></div><div class="inline"><input id="holName" placeholder="Nom de la période"><button class="mini" id="addHoliday">Ajouter</button></div></div>
-  <div class="setting"><h3>Données locales</h3><p class="small">Cette V1 conserve les données uniquement sur cet appareil. Firebase sera branché dans une version suivante.</p><button class="danger" id="resetData">Réinitialiser les données de démonstration</button></div>
+  <div class="setting"><h3>Sauvegarde avant migration</h3><p class="small">Télécharge une copie JSON des rendez-vous, véhicules, clients et informations de pièces présents dans le planning, ainsi que des réglages et fermetures manuelles. La sauvegarde est disponible uniquement après réception des données Firebase.</p><button class="save" type="button" id="exportBackup" disabled>⬇ Sauvegarder les données Firebase (JSON)</button><p class="small" id="backupStatus">En attente de Firebase…</p></div>
  </div>
 </section>
 </div>
@@ -194,8 +194,9 @@ function renderDay(){
  $('#dayPanel').innerHTML=body;
  let add=$('#addVehicle'); if(add&&!add.disabled)add.addEventListener('click',()=>openForm());
  document.querySelectorAll('#dayPanel [data-edit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.edit)));
+ document.querySelectorAll('#dayPanel [data-recheck]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.recheck);if(!v||!v.partsNeeded||!v.partsOK)return;if(!confirm('Repasser ce dossier en PIÈCES À CONTRÔLER ?'))return;v.partsOK=false;save();render()}));
 }
-function vehicleHTML(v){let pc=v.partsNeeded?(v.partsOK?' parts-ok':' parts-wait'):'';return `<div class="vehicle${pc}"><div><div class="plate">${esc(v.plate)} ${v.partsNeeded?(v.partsOK?'• ✓ PIÈCES OK':'• 📦 PIÈCES À VÉRIFIER'):''}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button></div>`}
+function vehicleHTML(v){let pc=v.partsNeeded?(v.partsOK?' parts-ok':' parts-wait'):'';return `<div class="vehicle${pc}"><div><div class="plate">${esc(v.plate)} ${v.partsNeeded?(v.partsOK?'• ✓ PIÈCES OK':'• 📦 PIÈCES À VÉRIFIER'):''}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:end"><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button>${v.partsNeeded&&v.partsOK?`<button class="status PRESENT" data-recheck="${v.id}">↩ À CONTRÔLER</button>`:''}</div></div>`}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderVehicles(){
  let q=$('#search').value.toLowerCase(),vs=[...data.vehicles].sort((a,b)=>b.date.localeCompare(a.date)).filter(v=>(v.client+' '+v.plate+' '+(v.model||'')+' '+v.work).toLowerCase().includes(q));
@@ -208,8 +209,8 @@ function renderParts(){
  const pending=all.filter(v=>!v.partsOK), shown=partsShowAll?all:pending;
  $('#partsCount').textContent=pending.length+' à vérifier';
  $('#partsPending').classList.toggle('on',!partsShowAll); $('#partsAll').classList.toggle('on',partsShowAll);
- $('#partsList').innerHTML=shown.length?shown.map(v=>`<div class="vehicle ${v.partsOK?'parts-ok':'parts-wait'}"><div style="min-width:0"><div class="plate">${esc(v.plate)} • ${esc(v.model||'')}</div><div class="client">${esc(v.client)} — ${fmt(v.date)}</div><div class="work">${esc(v.work)}</div><div style="margin-top:8px"><b>Pièces :</b> ${esc(v.partsList||'Liste non renseignée')}</div></div><button class="status ${v.partsOK?'TERMINE':'PRESENT'}" data-partsok="${v.id}">${v.partsOK?'↩ À RECONTRÔLER':'✓ PIÈCES OK'}</button></div>`).join(''):'<div class="empty">Aucun dossier à traiter.</div>';
- document.querySelectorAll('[data-partsok]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.partsok);if(!v)return;if(v.partsOK){if(!confirm('Repasser ce dossier en PIÈCES À CONTRÔLER ?'))return;v.partsOK=false}else v.partsOK=true;save();render()}));
+ $('#partsList').innerHTML=shown.length?shown.map(v=>`<div class="vehicle ${v.partsOK?'parts-ok':'parts-wait'}"><div style="min-width:0"><div class="plate">${esc(v.plate)} • ${esc(v.model||'')}</div><div class="client">${esc(v.client)} — ${fmt(v.date)}</div><div class="work">${esc(v.work)}</div><div style="margin-top:8px"><b>Pièces :</b> ${esc(v.partsList||'Liste non renseignée')}</div></div>${v.partsOK?'<span class="status TERMINE">✓ PIÈCES OK</span>':`<button class="status PRESENT" data-partsok="${v.id}">✓ PIÈCES OK</button>`}</div>`).join(''):'<div class="empty">Aucun dossier à traiter.</div>';
+ document.querySelectorAll('[data-partsok]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.partsok);if(!v)return;if(v.partsOK)return;v.partsOK=true;save();render()}));
 }
 function renderSettings(){
  $('#capMon').value=data.settings.capMon;$('#capTue').value=data.settings.capTue;$('#monOn').checked=data.settings.monOn;$('#tueOn').checked=data.settings.tueOn;
@@ -240,6 +241,20 @@ $('#monOn').addEventListener('change',e=>{data.settings.monOn=e.target.checked;s
 $('#addWork').addEventListener('click',()=>{let w=$('#newWork').value.trim();if(w&&!data.settings.works.includes(w)){data.settings.works.push(w);$('#newWork').value='';save();render()}});
 $('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name,type:'custom'});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
 $('#resetData').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les données locales ?')){data=JSON.parse(JSON.stringify(defaults));save();render()}});
+function updateBackupAvailability(){
+ const b=$('#exportBackup'); if(!b)return;
+ b.disabled=!cloudReady || applyingCloud;
+ $('#backupStatus').textContent=b.disabled?'En attente de la synchronisation Firebase…':`Prêt : ${data.vehicles.length} rendez-vous/dossiers dans la sauvegarde.`;
+}
+$('#exportBackup').addEventListener('click',()=>{
+ if(!cloudReady || applyingCloud){alert('Attends la synchronisation Firebase avant la sauvegarde.');return;}
+ const payload={format:'planning-atelier-backup',version:1,source:'planning_atelier/donnees',exportedAt:new Date().toISOString(),settings:structuredClone(data.settings),vehicles:structuredClone(data.vehicles)};
+ const json=JSON.stringify(payload,null,2);
+ const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');
+ a.href=url;a.download='Sauvegarde_Planning_Atelier_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ $('#backupStatus').textContent=`Sauvegarde téléchargée : ${payload.vehicles.length} dossiers. Conserve ce fichier hors du site.`;
+});
 $('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
 
 onSnapshot(cloudRef, async snap=>{
@@ -254,7 +269,7 @@ onSnapshot(cloudRef, async snap=>{
       localStorage.setItem(KEY,JSON.stringify(data));
       cloudReady=true;
       setSync("✓ Synchronisé");
-      render();
+      render();updateBackupAvailability();
     }else{
       cloudReady=true;
       setSync("Initialisation Firebase…");
@@ -263,18 +278,18 @@ onSnapshot(cloudRef, async snap=>{
         vehicles:data.vehicles,
         updatedAt:new Date().toISOString()
       });
-      setSync("✓ Synchronisé");
+      setSync("✓ Synchronisé");updateBackupAvailability();
     }
   }catch(err){
     console.error(err);
-    setSync("⚠ Firebase indisponible — mode local");
+    setSync("⚠ Firebase indisponible — mode local");cloudReady=false;updateBackupAvailability();
   }finally{
-    applyingCloud=false;
+    applyingCloud=false;updateBackupAvailability();
   }
 },err=>{
   console.error(err);
   cloudReady=false;
-  setSync("⚠ Firebase indisponible — mode local");
+  setSync("⚠ Firebase indisponible — mode local");updateBackupAvailability();
   render();
 });
 
