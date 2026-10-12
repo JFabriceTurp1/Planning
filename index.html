@@ -1,99 +1,20 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f6f7f9">
-<title>Planning Atelier</title>
-<style>
-:root{--bg:#f5f6f8;--card:#fff;--text:#18212b;--muted:#6b7280;--line:#e5e7eb;--accent:#1769aa;--green:#dff5e5;--green2:#1f7a3f;--orange:#fff0cf;--orange2:#9a5a00;--red:#fde1e1;--red2:#a52b2b;--closed:#e8eaed;--vac:#e4e7eb;--holiday:#dde7f3;--custom:#eadcf7}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-button,input,textarea,select{font:inherit;font-size:16px} button{min-height:44px;cursor:pointer}
-.app{max-width:920px;margin:auto;padding:calc(12px + env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom))}
-header{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 14px} h1{font-size:23px;margin:0}.sub{color:var(--muted);font-size:13px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
-.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.calhead button,.ghost{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 12px}.month{font-weight:750;text-transform:capitalize}
-.week,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.week{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}.grid{margin-top:6px}
-.day{position:relative;border:0;border-radius:11px;background:transparent;min-height:51px;padding:5px 2px;color:var(--text)}.day.other{opacity:.32}.day.atelier{background:var(--green)}.day.near{background:var(--orange)}.day.full{background:var(--red)}.day.closed{background:var(--closed);color:#777}.day.vacation{background:var(--vac);color:#666}.day.publicholiday{background:var(--holiday);color:#425b76}.day.customclosed{background:var(--custom);color:#65407d}.day.selected{outline:3px solid var(--accent);outline-offset:-3px}.num{display:block;font-weight:700}.load{display:block;font-size:10px;margin-top:3px;font-weight:700}.holidaydot{position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:#777}
-.daytitle{display:flex;justify-content:space-between;gap:8px;align-items:start}.daytitle h2{font-size:19px;margin:0}.badge{font-size:12px;font-weight:750;border-radius:999px;padding:6px 9px;background:#eef2f7}
-.meter{height:9px;border-radius:99px;background:#eceff2;overflow:hidden;margin:10px 0}.meter i{display:block;height:100%;background:var(--green2);width:0}.meter.near i{background:var(--orange2)}.meter.full i{background:var(--red2)}
-.vehicle{border-top:1px solid var(--line);padding:12px 8px;display:flex;justify-content:space-between;gap:10px;border-radius:12px}.vehicle.parts-wait{background:var(--orange)}.vehicle.parts-ok{background:var(--green)}.vehicle:first-of-type{border-top:0}.plate{font-weight:800}.client{font-weight:650;margin-top:2px}.work{color:var(--muted);font-size:14px;margin-top:3px}.status{border:0;border-radius:999px;padding:7px 9px;min-height:36px;height:36px;font-size:12px;font-weight:750;white-space:nowrap}.PREVU{background:#eef2f7}.PRESENT{background:var(--orange)}.TERMINE{background:var(--green)}
-.primary{width:100%;border:0;border-radius:14px;background:var(--accent);color:white;font-weight:750;padding:12px;margin-top:8px}.primary:disabled{opacity:.45}
-.empty{text-align:center;color:var(--muted);padding:16px 4px}.closedmsg{background:var(--closed);border-radius:12px;padding:12px;color:#5e6369;margin-top:10px}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:7px max(10px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:flex;justify-content:center;z-index:5}.nav{width:min(920px,100%);display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.nav button{border:0;background:transparent;border-radius:12px;font-size:12px;color:var(--muted)}.nav button.active{background:#edf4fa;color:var(--accent);font-weight:750}
-.view{display:none}.view.active{display:block}.field{margin:11px 0}.field label{display:block;font-size:13px;font-weight:700;margin:0 0 5px}.field input,.field textarea,.field select{width:100%;border:1px solid #cfd5dc;border-radius:12px;padding:11px;background:#fff}.field textarea{min-height:82px;resize:vertical}
-.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:white;border-radius:999px;padding:7px 11px;min-height:38px}.chip.on{background:#e7f1f9;border-color:#91b9d8;color:#145989}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.danger{background:#fff;border:1px solid #efb6b6;color:#a52b2b;border-radius:12px;padding:10px}.small{font-size:12px;color:var(--muted)}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;z-index:10}.modal.show{display:flex}.sheet{background:var(--bg);width:100%;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}.sheetbar{width:42px;height:5px;background:#c8ccd1;border-radius:99px;margin:0 auto 10px}.sheet h2{margin:0 0 6px}.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px}.actions button{border-radius:13px;border:1px solid var(--line);padding:10px}.actions .save{background:var(--accent);color:white;border:0;font-weight:750}
-.setting{padding:12px 0;border-top:1px solid var(--line)}.setting:first-child{border-top:0}.setting h3{margin:0 0 8px;font-size:16px}
-.inline{display:flex;gap:7px;align-items:center}.inline input{min-width:0}.listline{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0}.mini{border:1px solid var(--line);background:white;border-radius:10px;min-height:36px}
-@media(min-width:700px){.maincols{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.maincols .card{margin-bottom:0}.sheet{max-width:560px;margin:auto;border-radius:22px;margin-bottom:20px}.modal{align-items:center}.day{min-height:65px}}
-</style>
-</head>
-<body>
-<div class="app">
-<header><div><h1>Planning Atelier</h1><div class="sub">Firebase multiposte • optimisée iPhone</div><div class="small" id="syncState">Connexion Firebase…</div></div><div class="badge" id="todayBadge"></div></header>
-
-<section id="planning" class="view active">
- <div class="maincols">
-  <div class="card">
-   <div class="calhead"><button id="prevMonth" aria-label="Mois précédent">‹</button><div class="month" id="monthLabel"></div><button id="nextMonth" aria-label="Mois suivant">›</button></div>
-   <div class="week"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
-   <div class="grid" id="calendar"></div>
-   <div class="small" style="margin-top:10px">Vert : disponible • orange : presque complet • rouge : complet • gris : vacances/week-end • bleu-gris : jour férié • violet : fermeture manuelle</div>
-  </div>
-  <div class="card" id="dayPanel"></div>
- </div>
-</section>
-
-<section id="vehicles" class="view">
- <div class="card"><h2 style="margin-top:0">Véhicules enregistrés</h2><div class="field"><input id="search" placeholder="Rechercher client, véhicule, immatriculation, travaux…"></div><div id="vehicleList"></div></div>
-</section>
-
-<section id="parts" class="view">
- <div class="card">
-  <div class="daytitle"><div><h2>📦 Approvisionnements</h2><div class="small">Validation des pièces et remise en contrôle possible à tout moment</div></div><span class="badge" id="partsCount">0 à vérifier</span></div>
-  <div class="chips" style="margin:12px 0"><button type="button" class="chip on" id="partsPending">À vérifier</button><button type="button" class="chip" id="partsAll">Tous</button></div>
-  <div id="partsList"></div>
- </div>
-</section>
-<section id="settings" class="view">
- <div class="card">
-  <h2 style="margin-top:0">Paramètres</h2>
-  <div class="setting"><h3>Capacité atelier</h3><div class="row"><div class="field"><label>Lundi</label><input id="capMon" type="number" min="1" max="30"></div><div class="field"><label>Mardi matin</label><input id="capTue" type="number" min="1" max="30"></div></div></div>
-  <div class="setting"><h3>Jours d'atelier</h3><label><input id="monOn" type="checkbox"> Lundi</label><br><label><input id="tueOn" type="checkbox"> Mardi matin</label></div>
-  <div class="setting"><h3>Travaux fréquents</h3><div id="workSettings"></div><div class="inline field"><input id="newWork" placeholder="Ex. Climatisation"><button class="mini" id="addWork">Ajouter</button></div></div>
-  <div class="setting"><h3>Calendrier officiel — La Réunion</h3>
-  <p class="small">Vacances scolaires 2026-2027 et jours fériés intégrés automatiquement. Ces dates bloquent la prise de rendez-vous.</p>
-  <div id="officialHolidaySettings"></div>
- </div>
- <div class="setting"><h3>Fermetures personnalisées</h3><div id="holidaySettings"></div><div class="row"><div class="field"><label>Début</label><input id="holStart" type="date"></div><div class="field"><label>Fin</label><input id="holEnd" type="date"></div></div><div class="inline"><input id="holName" placeholder="Nom de la période"><button class="mini" id="addHoliday">Ajouter</button></div></div>
-  <div class="setting"><h3>Sauvegarde avant migration</h3><p class="small">Télécharge une copie JSON des rendez-vous, véhicules, clients et informations de pièces présents dans le planning, ainsi que des réglages et fermetures manuelles. La sauvegarde est disponible uniquement après réception des données Firebase.</p><button class="save" type="button" id="exportBackup" disabled>⬇ Sauvegarder les données Firebase (JSON)</button><p class="small" id="backupStatus">En attente de Firebase…</p></div>
- </div>
-</section>
-</div>
-
-<nav class="bottom"><div class="nav"><button class="active" data-view="planning">📅<br>Planning</button><button data-view="vehicles">🚗<br>Véhicules</button><button data-view="parts">📦<br>Pièces</button><button data-view="settings">⚙️<br>Paramètres</button></div></nav>
-
-<div class="modal" id="modal"><div class="sheet"><div class="sheetbar"></div><h2 id="formTitle">Ajouter un véhicule</h2>
-<form id="vehicleForm">
-<input type="hidden" id="editId">
-<div class="field"><label>Date</label><input id="vDate" type="date" required></div>
-<div class="field"><label>Nom du client</label><input id="vClient" autocomplete="name" required placeholder="DUPONT Jean"></div>
-<div class="field"><label>Immatriculation</label><input id="vPlate" autocapitalize="characters" required placeholder="AB-123-CD"></div>
-<div class="field"><label>Véhicule / Modèle</label><input id="vModel" required placeholder="Ex. Toyota C-HR"></div>
-<div class="field"><label>Travaux prévus</label><textarea id="vWork" required placeholder="Révision, freinage…"></textarea></div>
-<div class="field"><label>Travaux fréquents</label><div class="chips" id="workChips"></div></div>
-<div class="field"><label style="display:flex;align-items:center;gap:10px"><input id="vPartsNeeded" type="checkbox" style="width:22px;height:22px"> 🔧 Pièces détachées nécessaires</label></div>
-<div class="field" id="partsDetails" style="display:none"><label>Liste des pièces nécessaires</label><textarea id="vPartsList" placeholder="Ex. Filtre à huile • Filtre habitacle • 5W30"></textarea><div class="small">Le dossier apparaîtra automatiquement dans Approvisionnements.</div></div>
-<div class="row"><div class="field"><label>Durée</label><select id="vDuration"><option value="0.5">½ journée</option><option value="1" selected>1 journée</option><option value="2">2 jours</option></select></div><div class="field"><label>État</label><select id="vStatus"><option value="PREVU">Prévu</option><option value="PRESENT">Présent</option><option value="TERMINE">Terminé</option></select></div></div>
-<div class="actions"><button type="button" id="cancelForm">Annuler</button><button class="save" type="submit">Enregistrer</button></div>
-</form></div></div>
-
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f6f8fb"><title>Planning Atelier · Accès sécurisé</title><style>
+:root{--blue:#1468a8;--green:#d9f5df;--orange:#ffedc9;--red:#ffe0e0;--purple:#eadcf7;--gray:#e8ebef}*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#1d2935;font:16px system-ui,-apple-system,Arial}button,input,select,textarea{font:inherit}button{cursor:pointer;min-height:42px}header{padding:15px 16px;background:#fff;border-bottom:1px solid #e4e8ef;display:flex;justify-content:space-between;gap:12px;align-items:center}h1{font-size:21px;margin:0}.sub{font-size:12px;color:#64748b}.app{max-width:940px;margin:auto;padding:14px 12px 100px}.card{background:white;border:1px solid #e4e8ef;border-radius:17px;padding:15px;margin:0 0 12px}h2{font-size:19px;margin:0 0 12px}h3{font-size:16px}.nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;display:flex;justify-content:center;gap:4px;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:5}.nav button{border:0;border-radius:10px;background:transparent;color:#526173;flex:1;max-width:170px;font-size:12px}.nav button.active{background:#e3eff8;color:#075d9e;font-weight:800}.view{display:none}.view.active{display:block}.row{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.day{border:0;border-radius:10px;padding:7px 2px;min-height:58px;background:#f5f7fa}.day.on{background:var(--green)}.day.busy{background:var(--orange)}.day.full{background:var(--red)}.day.vac{background:var(--gray)}.day.ferie{background:#dce8f6}.day.custom{background:var(--purple)}.day.selected{outline:2px solid var(--blue)}.small{font-size:12px;color:#657282}.muted{color:#64748b}.entry{padding:12px;margin:8px 0;border-radius:12px;background:#f6f8fb;border:1px solid #e8ebef}.entry.wait{background:var(--orange)}.entry.ok{background:var(--green)}.entry strong{display:block}button.primary{background:var(--blue);border:0;color:white;border-radius:11px;padding:9px 14px;font-weight:750}button.secondary{background:#fff;border:1px solid #cad5e0;border-radius:11px;padding:8px 12px}button.danger{background:#fff1f1;color:#a32929;border:1px solid #edc1c1;border-radius:10px;padding:8px 12px}button:disabled{opacity:.5;cursor:not-allowed}.field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}.field input,.field select,.field textarea{width:100%;border:1px solid #cdd5df;border-radius:10px;padding:11px;background:white}.field textarea{min-height:75px}.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}.hidden{display:none!important}.notice{padding:12px;border-radius:12px;background:#eef4fa;margin:10px 0}.error{background:#fff0f0;color:#9c2828}.pill{border-radius:99px;background:#e9eef5;padding:5px 9px;font-size:12px}.modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:9;padding:12px}.modal.open{display:flex}.sheet{background:white;border-radius:17px;padding:18px;width:min(550px,100%);max-height:92vh;overflow:auto}.week{font-size:12px;text-align:center;color:#718096;padding:5px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{padding:6px 9px;border:1px solid #ddd;border-radius:30px;background:white;font-size:12px;min-height:34px}.login{max-width:440px;margin:12vh auto}.loading{opacity:.6}@media(max-width:460px){.two{grid-template-columns:1fr}.day{min-height:48px;font-size:12px}h1{font-size:18px}}
+</style></head><body>
+<header><div><h1>🔧 Planning Atelier</h1><div class="sub" id="status">Connexion sécurisée</div></div><div class="row"><span id="who" class="small"></span><button class="secondary hidden" id="logout">Quitter</button></div></header>
+<div class="app"><div id="login" class="card login"><h2>Connexion Google</h2><p>Accès réservé aux personnes autorisées par l'administrateur.</p><button class="primary" id="loginBtn">Se connecter avec Google</button><div id="loginError" class="notice error hidden"></div></div><div id="pending" class="card hidden"><h2>Accès en attente</h2><p>Votre compte Google n'est pas encore autorisé. Transmettez votre adresse Gmail à l'administrateur.</p><p id="pendingEmail"></p></div>
+<div id="workspace" class="hidden"><nav class="nav" id="nav"><button data-view="planning">📅 Planning</button><button data-view="vehicles">🚗 Véhicules</button><button data-view="parts">📦 Pièces</button><button data-view="settings">⚙️ Paramètres</button><button data-view="users">👥 Utilisateurs</button></nav>
+<section class="view" id="planning"><div class="card"><div class="row"><button class="secondary" id="prev">‹</button><strong id="month"></strong><button class="secondary" id="next">›</button></div><div class="grid" id="week"></div><div class="grid" id="calendar"></div><p class="small">Vert : disponible · orange : presque complet · rouge : complet · gris : vacances/week-end · bleu : férié · violet : fermeture manuelle</p></div><div class="card"><div class="row"><h2 id="dayTitle"></h2><span id="capacity" class="pill"></span></div><div id="dayItems"></div><button class="primary" id="newAppt">+ Rendez-vous</button></div></section>
+<section class="view" id="vehicles"><div class="card"><div class="row"><h2>Fiches clients et véhicules</h2><button class="primary" id="newClient">+ Fiche</button></div><div class="field"><input id="searchClient" placeholder="Rechercher un client ou une immatriculation"></div><div id="clientList"></div></div></section>
+<section class="view" id="parts"><div class="card"><div class="row"><h2>📦 Approvisionnements</h2><span id="pendingCount" class="pill"></span></div><p class="small">Seuls les dossiers avec pièces nécessaires apparaissent ici.</p><div class="chips"><button class="secondary" id="filterPending">À vérifier</button><button class="secondary" id="filterAll">Tous</button></div><div id="partsList"></div></div></section>
+<section class="view" id="settings"><div class="card"><h2>Paramètres atelier</h2><div class="two"><div class="field"><label>Capacité lundi</label><input id="capMon" type="number" min="1" max="30"></div><div class="field"><label>Capacité mardi matin</label><input id="capTue" type="number" min="1" max="30"></div></div><label><input id="monOn" type="checkbox"> Atelier le lundi</label><p><label><input id="tueOn" type="checkbox"> Atelier le mardi matin</label></p><button class="primary" id="saveSettings">Enregistrer</button></div><div class="card"><h2>Fermetures personnalisées</h2><div id="closures"></div><div class="two"><div class="field"><label>Du</label><input id="closedFrom" type="date"></div><div class="field"><label>Au</label><input id="closedTo" type="date"></div></div><div class="field"><label>Motif</label><input id="closedReason" placeholder="Réunion pédagogique"></div><button class="primary" id="addClosure">Ajouter la fermeture</button></div><div class="card"><h2>Travaux fréquents</h2><div id="workList"></div><div class="row"><input id="newWork" placeholder="Nouvelle intervention"><button class="secondary" id="addWork">Ajouter</button></div></div><div class="card"><h2>Migration de l'ancien planning</h2><p class="small">À utiliser une seule fois, après sauvegarde. Import du document historique planning_atelier/donnees vers les nouvelles collections sécurisées. Les anciens rendez-vous et les fiches clients/véhicules seront repris.</p><button class="secondary" id="migrate">Importer les anciennes données</button><div id="migrateMsg" class="small"></div></div></section>
+<section class="view" id="users"><div class="card"><h2>Gestion des utilisateurs</h2><p class="small">Administrateur : accès total · Enseignant : planning et fiches · Pièces : approvisionnement uniquement. L'autorisation se fait sur l'adresse Google exacte.</p><div class="field"><label>Adresse Gmail</label><input id="userEmail" type="email" placeholder="collaborateur@gmail.com"></div><div class="field"><label>Rôle</label><select id="userRole"><option value="parts">Collaborateur pièces</option><option value="teacher">Enseignant</option><option value="admin">Administrateur</option></select></div><button class="primary" id="addUser">Autoriser le compte</button><div id="usersList"></div></div></section>
+</div></div>
+<div class="modal" id="modal"><div class="sheet"><div class="row"><h2 id="modalTitle">Fiche</h2><button class="secondary" id="closeModal">Fermer</button></div><form id="form"><div id="formFields"></div><div class="row"><button type="button" class="danger hidden" id="deleteEntry">Supprimer</button><button type="submit" class="primary">Enregistrer</button></div></form></div></div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import {getFirestore,doc,collection,onSnapshot,getDoc,getDocs,setDoc,updateDoc,deleteDoc,writeBatch,serverTimestamp,query,where} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 const firebaseConfig = {
   apiKey: "AIzaSyDN9ZurC1Diqj900KZ4IMVLIBUuGM15r5c",
   authDomain: "planning-atelier-3676c.firebaseapp.com",
@@ -102,20 +23,9 @@ const firebaseConfig = {
   messagingSenderId: "623371806091",
   appId: "1:623371806091:web:0989270b6fe8bcc1eb3b8e"
 };
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-const cloudRef = doc(db, "planning_atelier", "donnees");
 
-(()=>{
-const KEY='planningAtelierV1';
-const pad=n=>String(n).padStart(2,'0');
-const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
-const fmt=s=>parse(s).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const defaults={settings:{capMon:6,capTue:4,monOn:true,tueOn:true,works:['Entretien','Freinage','Diagnostic','Distribution','Pneumatiques','Électricité'],holidays:[]},vehicles:[]};
-// Fermetures officielles intégrées pour l'académie de La Réunion.
-// Les dates de fin des vacances correspondent au dernier jour sans cours
-// (la reprise officielle a lieu le lendemain matin).
+const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app),provider=new GoogleAuthProvider();
+const ADMIN_EMAIL='jfabriceturpin@gmail.com';
 const OFFICIAL_CLOSURES = [
   {start:'2026-10-10',end:'2026-10-25',name:"Vacances après la 1re période",type:'vacances'},
   {start:'2026-12-19',end:'2027-01-31',name:"Vacances de l’été austral",type:'vacances'},
@@ -140,160 +50,51 @@ const OFFICIAL_CLOSURES = [
   {start:'2027-12-20',end:'2027-12-20',name:"Abolition de l’esclavage — La Réunion",type:'ferie'},
   {start:'2027-12-25',end:'2027-12-25',name:'Noël',type:'ferie'}
 ];
-let data; try{data=JSON.parse(localStorage.getItem(KEY))||structuredClone(defaults)}catch(e){data=JSON.parse(JSON.stringify(defaults))}
-data.settings={...defaults.settings,...data.settings}; data.vehicles=data.vehicles||[];
-let selected=iso(new Date()), cursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-const $=s=>document.querySelector(s);
-let cloudReady=false, applyingCloud=false, saveTimer=null;
-function setSync(msg){ const el=$('#syncState'); if(el) el.textContent=msg; }
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(data));
-  if(!cloudReady || applyingCloud) return;
-  clearTimeout(saveTimer);
-  setSync("Synchronisation…");
-  saveTimer=setTimeout(async()=>{
-    try{
-      await setDoc(cloudRef,{
-        settings:data.settings,
-        vehicles:data.vehicles,
-        updatedAt:new Date().toISOString()
-      });
-      setSync("✓ Synchronisé");
-    }catch(err){
-      console.error(err);
-      setSync("⚠ Hors ligne — copie locale conservée");
-    }
-  },350);
-}
-function holiday(date){
-  const official=OFFICIAL_CLOSURES.find(h=>date>=h.start&&date<=h.end);
-  if(official) return {...official,source:'official'};
-  const custom=data.settings.holidays.find(h=>date>=h.start&&date<=h.end);
-  return custom ? {...custom,type:'custom',source:'custom'} : null;
-}
-function atelierInfo(s){let d=parse(s),dow=d.getDay(); if(holiday(s))return {open:false,cap:0}; if(dow===1&&data.settings.monOn)return{open:true,cap:+data.settings.capMon};if(dow===2&&data.settings.tueOn)return{open:true,cap:+data.settings.capTue};return{open:false,cap:0}}
-function vehiclesOn(s){return data.vehicles.filter(v=>v.date===s&&v.status!=='TERMINE')}
-function renderCalendar(){
- $('#monthLabel').textContent=cursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
- let y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-((first.getDay()+6)%7));
- let out='';
- for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),inf=atelierInfo(s),count=vehiclesOn(s).length,h=holiday(s),cls='day '+(d.getMonth()!==m?'other ':'')+(s===selected?'selected ':'')+((d.getDay()===0||d.getDay()===6)&&!h?'closed ':'');
- if(h){cls+=h.type==='custom'?'customclosed':(h.type==='ferie'?'publicholiday':'vacation')} else if(inf.open){let r=count/inf.cap;cls+=r>=1?'full':r>=.75?'near':'atelier'}
- out+=`<button class="${cls}" data-date="${s}"><span class="num">${d.getDate()}</span>${inf.open?`<span class="load">${count}/${inf.cap}</span>`:''}${h?'<i class="holidaydot"></i>':''}</button>`}
- $('#calendar').innerHTML=out; document.querySelectorAll('.day').forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.date;render()}))
-}
-function renderDay(){
- let inf=atelierInfo(selected),vs=data.vehicles.filter(v=>v.date===selected),active=vs.filter(v=>v.status!=='TERMINE').length,h=holiday(selected);
- let pct=inf.cap?Math.min(100,active/inf.cap*100):0, tone=pct>=100?'full':pct>=75?'near':'';
- let body=`<div class="daytitle"><div><h2>${fmt(selected)}</h2><div class="small">${h?h.name:(inf.open?'Journée atelier':'Pas d’atelier prévu')}</div></div>${inf.open?`<span class="badge">${active} / ${inf.cap}</span>`:''}</div>`;
- if(inf.open) body+=`<div class="meter ${tone}"><i style="width:${pct}%"></i></div>`;
- if(h) body+=`<div class="closedmsg" style="${h.type==='custom'?'background:var(--custom)':h.type==='ferie'?'background:var(--holiday)':'background:var(--vac)'}">🚫 Aucun rendez-vous possible — ${h.name}${h.type==='custom'?' (fermeture manuelle)':''}</div>`;
- if(vs.length)vs.forEach(v=>body+=vehicleHTML(v)); else body+=`<div class="empty">Aucun véhicule enregistré pour cette date.</div>`;
- body+=`<button class="primary" id="addVehicle" ${(!inf.open||h||active>=inf.cap)?'disabled':''}>＋ Ajouter un véhicule</button>`;
- if(inf.open&&active>=inf.cap)body+=`<div class="small" style="text-align:center;margin-top:7px">Capacité atteinte.</div>`;
- $('#dayPanel').innerHTML=body;
- let add=$('#addVehicle'); if(add&&!add.disabled)add.addEventListener('click',()=>openForm());
- document.querySelectorAll('#dayPanel [data-edit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.edit)));
- document.querySelectorAll('#dayPanel [data-recheck]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.recheck);if(!v||!v.partsNeeded||!v.partsOK)return;if(!confirm('Repasser ce dossier en PIÈCES À CONTRÔLER ?'))return;v.partsOK=false;save();render()}));
-}
-function vehicleHTML(v){let pc=v.partsNeeded?(v.partsOK?' parts-ok':' parts-wait'):'';return `<div class="vehicle${pc}"><div><div class="plate">${esc(v.plate)} ${v.partsNeeded?(v.partsOK?'• ✓ PIÈCES OK':'• 📦 PIÈCES À VÉRIFIER'):''}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${esc(v.work)}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:end"><button class="status ${v.status}" data-edit="${v.id}">${v.status==='PREVU'?'PRÉVU':v.status==='PRESENT'?'PRÉSENT':'TERMINÉ'}</button>${v.partsNeeded&&v.partsOK?`<button class="status PRESENT" data-recheck="${v.id}">↩ À CONTRÔLER</button>`:''}</div></div>`}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function renderVehicles(){
- let q=$('#search').value.toLowerCase(),vs=[...data.vehicles].sort((a,b)=>b.date.localeCompare(a.date)).filter(v=>(v.client+' '+v.plate+' '+(v.model||'')+' '+v.work).toLowerCase().includes(q));
- $('#vehicleList').innerHTML=vs.length?vs.map(v=>`<div class="vehicle"><div><div class="plate">${esc(v.plate)}</div><div class="client">${esc(v.model||'Véhicule non renseigné')}</div><div class="client">${esc(v.client)}</div><div class="work">${fmt(v.date)} • ${esc(v.work)}</div></div><button class="status ${v.status}" data-vedit="${v.id}">Modifier</button></div>`).join(''):'<div class="empty">Aucun véhicule.</div>';
- document.querySelectorAll('[data-vedit]').forEach(b=>b.addEventListener('click',()=>openForm(b.dataset.vedit)));
-}
-let partsShowAll=false;
-function renderParts(){
- const all=data.vehicles.filter(v=>v.partsNeeded).sort((a,b)=>a.date.localeCompare(b.date));
- const pending=all.filter(v=>!v.partsOK), shown=partsShowAll?all:pending;
- $('#partsCount').textContent=pending.length+' à vérifier';
- $('#partsPending').classList.toggle('on',!partsShowAll); $('#partsAll').classList.toggle('on',partsShowAll);
- $('#partsList').innerHTML=shown.length?shown.map(v=>`<div class="vehicle ${v.partsOK?'parts-ok':'parts-wait'}"><div style="min-width:0"><div class="plate">${esc(v.plate)} • ${esc(v.model||'')}</div><div class="client">${esc(v.client)} — ${fmt(v.date)}</div><div class="work">${esc(v.work)}</div><div style="margin-top:8px"><b>Pièces :</b> ${esc(v.partsList||'Liste non renseignée')}</div></div>${v.partsOK?'<span class="status TERMINE">✓ PIÈCES OK</span>':`<button class="status PRESENT" data-partsok="${v.id}">✓ PIÈCES OK</button>`}</div>`).join(''):'<div class="empty">Aucun dossier à traiter.</div>';
- document.querySelectorAll('[data-partsok]').forEach(b=>b.addEventListener('click',()=>{const v=data.vehicles.find(x=>x.id===b.dataset.partsok);if(!v)return;if(v.partsOK)return;v.partsOK=true;save();render()}));
-}
-function renderSettings(){
- $('#capMon').value=data.settings.capMon;$('#capTue').value=data.settings.capTue;$('#monOn').checked=data.settings.monOn;$('#tueOn').checked=data.settings.tueOn;
- $('#workSettings').innerHTML=data.settings.works.map((w,i)=>`<div class="listline"><span>${esc(w)}</span><button class="mini" data-delwork="${i}">×</button></div>`).join('');
- document.querySelectorAll('[data-delwork]').forEach(b=>b.addEventListener('click',()=>{data.settings.works.splice(+b.dataset.delwork,1);save();render()}));
- $('#officialHolidaySettings').innerHTML=OFFICIAL_CLOSURES.map(h=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start}${h.end!==h.start?' → '+h.end:''}</span></span><span class="badge">${h.type==='ferie'?'Férié':'Vacances'}</span></div>`).join('');
- $('#holidaySettings').innerHTML=data.settings.holidays.length?data.settings.holidays.map((h,i)=>`<div class="listline"><span><b>${esc(h.name)}</b><br><span class="small">${h.start} → ${h.end}</span></span><button class="mini" data-delhol="${i}">×</button></div>`).join(''):'<div class="small">Aucune fermeture personnalisée enregistrée.</div>';
- document.querySelectorAll('[data-delhol]').forEach(b=>b.addEventListener('click',()=>{data.settings.holidays.splice(+b.dataset.delhol,1);save();render()}));
-}
-function render(){renderCalendar();renderDay();renderVehicles();renderParts();renderSettings()}
-function openForm(id){
- let v=id?data.vehicles.find(x=>x.id===id):null; $('#editId').value=v?.id||'';$('#vDate').value=v?.date||selected;$('#vClient').value=v?.client||'';$('#vPlate').value=v?.plate||'';$('#vModel').value=v?.model||'';$('#vWork').value=v?.work||'';$('#vPartsNeeded').checked=!!v?.partsNeeded;$('#vPartsList').value=v?.partsList||'';$('#partsDetails').style.display=$('#vPartsNeeded').checked?'block':'none';$('#vDuration').value=String(v?.duration||1);$('#vStatus').value=v?.status||'PREVU';$('#formTitle').textContent=v?'Modifier le véhicule':'Ajouter un véhicule';
- $('#workChips').innerHTML=data.settings.works.map(w=>`<button type="button" class="chip">${esc(w)}</button>`).join('');
- document.querySelectorAll('#workChips .chip').forEach(b=>b.addEventListener('click',()=>{let t=$('#vWork');t.value=t.value.trim()?t.value.trim()+' • '+b.textContent:b.textContent;b.classList.add('on')}));
- $('#modal').classList.add('show');setTimeout(()=>$('#vClient').focus(),100)
-}
-function closeForm(){$('#modal').classList.remove('show')}
-$('#vehicleForm').addEventListener('submit',e=>{e.preventDefault();let id=$('#editId').value,obj={id:id||String(Date.now()),date:$('#vDate').value,client:$('#vClient').value.trim(),plate:$('#vPlate').value.trim().toUpperCase(),model:$('#vModel').value.trim(),work:$('#vWork').value.trim(),partsNeeded:$('#vPartsNeeded').checked,partsList:$('#vPartsList').value.trim(),partsOK:false,duration:+$('#vDuration').value,status:$('#vStatus').value};if(id){const previous=data.vehicles.find(v=>v.id===id);obj.partsOK=obj.partsNeeded?!!previous?.partsOK:false;}if(!obj.date||!obj.client||!obj.plate||!obj.model||!obj.work)return;if(id){let i=data.vehicles.findIndex(v=>v.id===id);data.vehicles[i]=obj}else data.vehicles.push(obj);selected=obj.date;cursor=new Date(parse(selected).getFullYear(),parse(selected).getMonth(),1);save();closeForm();render()});
-$('#cancelForm').addEventListener('click',closeForm);$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeForm()});
-$('#prevMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()});$('#nextMonth').addEventListener('click',()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()});
-document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav button,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.view).classList.add('active');render()}));
-$('#vPartsNeeded').addEventListener('change',e=>{$('#partsDetails').style.display=e.target.checked?'block':'none';if(!e.target.checked)$('#vPartsList').value='';});
-$('#partsPending').addEventListener('click',()=>{partsShowAll=false;renderParts()});
-$('#partsAll').addEventListener('click',()=>{partsShowAll=true;renderParts()});
-$('#search').addEventListener('input',renderVehicles);
-['capMon','capTue'].forEach(id=>$('#'+id).addEventListener('change',e=>{data.settings[id]=Math.max(1,+e.target.value||1);save();render()}));
-$('#monOn').addEventListener('change',e=>{data.settings.monOn=e.target.checked;save();render()});$('#tueOn').addEventListener('change',e=>{data.settings.tueOn=e.target.checked;save();render()});
-$('#addWork').addEventListener('click',()=>{let w=$('#newWork').value.trim();if(w&&!data.settings.works.includes(w)){data.settings.works.push(w);$('#newWork').value='';save();render()}});
-$('#addHoliday').addEventListener('click',()=>{let start=$('#holStart').value,end=$('#holEnd').value,name=$('#holName').value.trim()||'Fermeture';if(start&&end&&end>=start){data.settings.holidays.push({start,end,name,type:'custom'});$('#holStart').value=$('#holEnd').value=$('#holName').value='';save();render()}});
-$('#resetData').addEventListener('click',()=>{if(confirm('Réinitialiser toutes les données locales ?')){data=JSON.parse(JSON.stringify(defaults));save();render()}});
-function updateBackupAvailability(){
- const b=$('#exportBackup'); if(!b)return;
- b.disabled=!cloudReady || applyingCloud;
- $('#backupStatus').textContent=b.disabled?'En attente de la synchronisation Firebase…':`Prêt : ${data.vehicles.length} rendez-vous/dossiers dans la sauvegarde.`;
-}
-$('#exportBackup').addEventListener('click',()=>{
- if(!cloudReady || applyingCloud){alert('Attends la synchronisation Firebase avant la sauvegarde.');return;}
- const payload={format:'planning-atelier-backup',version:1,source:'planning_atelier/donnees',exportedAt:new Date().toISOString(),settings:structuredClone(data.settings),vehicles:structuredClone(data.vehicles)};
- const json=JSON.stringify(payload,null,2);
- const blob=new Blob([json],{type:'application/json;charset=utf-8'});
- const url=URL.createObjectURL(blob);const a=document.createElement('a');
- a.href=url;a.download='Sauvegarde_Planning_Atelier_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
- $('#backupStatus').textContent=`Sauvegarde téléchargée : ${payload.vehicles.length} dossiers. Conserve ce fichier hors du site.`;
-});
-$('#todayBadge').textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-
-onSnapshot(cloudRef, async snap=>{
-  try{
-    applyingCloud=true;
-    if(snap.exists()){
-      const remote=snap.data();
-      data={
-        settings:{...defaults.settings,...(remote.settings||{})},
-        vehicles:Array.isArray(remote.vehicles)?remote.vehicles:[]
-      };
-      localStorage.setItem(KEY,JSON.stringify(data));
-      cloudReady=true;
-      setSync("✓ Synchronisé");
-      render();updateBackupAvailability();
-    }else{
-      cloudReady=true;
-      setSync("Initialisation Firebase…");
-      await setDoc(cloudRef,{
-        settings:data.settings,
-        vehicles:data.vehicles,
-        updatedAt:new Date().toISOString()
-      });
-      setSync("✓ Synchronisé");updateBackupAvailability();
-    }
-  }catch(err){
-    console.error(err);
-    setSync("⚠ Firebase indisponible — mode local");cloudReady=false;updateBackupAvailability();
-  }finally{
-    applyingCloud=false;updateBackupAvailability();
-  }
-},err=>{
-  console.error(err);
-  cloudReady=false;
-  setSync("⚠ Firebase indisponible — mode local");updateBackupAvailability();
-  render();
-});
-
-render();
-})();
-</script>
-</body></html>
+const defaults={capMon:6,capTue:4,monOn:true,tueOn:true,works:['Entretien','Freinage','Diagnostic','Distribution','Pneumatiques','Électricité'],holidays:[]};
+const $=q=>document.querySelector(q), $$=q=>[...document.querySelectorAll(q)],esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>{let [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)},fmt=s=>parse(s).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+let me=null,role=null,users=[],appointments=[],clients=[],settings={...defaults},unsubs=[],selected=iso(new Date()),cursor=new Date(),view='planning',partsAll=false,modalType='',editing=null;
+function notify(s,error=false){$('#status').textContent=s;$('#status').style.color=error?'#b32626':'#64748b'}
+function allowed(v){return role==='admin'||(role==='teacher'&&v!=='users'&&v!=='settings')||(role==='parts'&&v==='parts')}
+function go(v){if(!allowed(v))return;view=v;$$('.view').forEach(x=>x.classList.toggle('active',x.id===v));$$('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===v));render()}
+function cleanup(){unsubs.forEach(f=>f());unsubs=[];appointments=[];clients=[];users=[];role=null}
+function watch(path,cb){unsubs.push(onSnapshot(path,cb,e=>notify('Erreur Firebase : '+e.message,true)))}
+async function signed(user){cleanup();me=user;$('#login').classList.toggle('hidden',!!user);$('#logout').classList.toggle('hidden',!user);$('#workspace').classList.add('hidden');$('#pending').classList.add('hidden');if(!user){notify('Connexion requise');return}
+ $('#who').textContent=user.email||'';let email=(user.email||'').toLowerCase();if(!user.emailVerified){$('#pending').classList.remove('hidden');$('#pendingEmail').textContent='Adresse Google non vérifiée';return}
+ try{let u=await getDoc(doc(db,'users',email));role=email===ADMIN_EMAIL?'admin':(u.exists()&&u.data().enabled!==false?u.data().role:null)}catch(e){notify('Accès impossible : '+e.message,true);return}
+ if(!role){$('#pending').classList.remove('hidden');$('#pendingEmail').textContent=user.email;notify('Compte non autorisé');return}
+ $('#workspace').classList.remove('hidden');$$('#nav button').forEach(b=>b.classList.toggle('hidden',!allowed(b.dataset.view)));go(role==='parts'?'parts':'planning');
+ watch(role==='parts'?query(collection(db,'appointments'),where('partsNeeded','==',true)):collection(db,'appointments'),snap=>{appointments=snap.docs.map(d=>({id:d.id,...d.data()}));render()});
+ if(role!=='parts'){
+ watch(collection(db,'clients'),snap=>{clients=snap.docs.map(d=>({id:d.id,...d.data()}));render()});
+ watch(doc(db,'config','atelier'),snap=>{settings={...defaults,...(snap.exists()?snap.data():{})};render()});}
+ if(role==='admin')watch(collection(db,'users'),snap=>{users=snap.docs.map(d=>({id:d.id,...d.data()}));renderUsers()});
+ notify('✓ Connecté · '+({admin:'Administrateur',teacher:'Enseignant',parts:'Approvisionnements'}[role]));}
+$('#loginBtn').onclick=async()=>{try{if(/iPhone|iPad|iPod/.test(navigator.userAgent))await signInWithRedirect(auth,provider);else await signInWithPopup(auth,provider)}catch(e){$('#loginError').textContent=e.message;$('#loginError').classList.remove('hidden')}};
+getRedirectResult(auth).catch(e=>{notify('Connexion Google : '+e.message,true)});onAuthStateChanged(auth,signed);$('#logout').onclick=()=>signOut(auth);$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+function closed(s){let c=(settings.holidays||[]).find(x=>s>=x.start&&s<=x.end);if(c)return {...c,type:'custom'};return OFFICIAL_CLOSURES.find(x=>s>=x.start&&s<=x.end)||null}
+function dayInfo(s){let d=parse(s),n=d.getDay(),c=closed(s),open=!c&&((n===1&&settings.monOn)||(n===2&&settings.tueOn)),cap=n===1?+settings.capMon:+settings.capTue;let count=appointments.filter(a=>a.date===s&&a.status!=='TERMINE').length;return {open,cap,count,c}}
+function renderCalendar(){let y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-((first.getDay()+6)%7));$('#month').textContent=first.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});$('#week').innerHTML=['L','M','M','J','V','S','D'].map(x=>`<span class="week">${x}</span>`).join('');let h='';for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let s=iso(d),info=dayInfo(s),c=info.c,kind=c?(c.type==='custom'?'custom':c.type==='ferie'?'ferie':'vac'):(info.open?(info.count>=info.cap?'full':info.count/info.cap>=.75?'busy':'on'):'vac');h+=`<button class="day ${kind} ${s===selected?'selected':''}" data-day="${s}" style="${d.getMonth()!==m?'opacity:.35':''}"><b>${d.getDate()}</b><br><small>${info.open?info.count+'/'+info.cap:''}</small></button>`}$('#calendar').innerHTML=h;$$('[data-day]').forEach(b=>b.onclick=()=>{selected=b.dataset.day;render()})}
+function apptCard(a,where){let color=a.partsNeeded?(a.partsOK?'ok':'wait'):'';let actions=where==='parts'?(a.partsOK?'<span class="pill">✓ PIÈCES OK</span>':`<button class="primary" data-ok="${esc(a.id)}">✓ PIÈCES OK</button>`):`<button class="secondary" data-editappt="${esc(a.id)}">Modifier RDV</button>${a.partsNeeded&&a.partsOK?`<button class="secondary" data-recheck="${esc(a.id)}">↩ À CONTRÔLER</button>`:''}`;return `<div class="entry ${color}"><strong>${esc(a.plate)} · ${esc(a.model)}</strong><div>${esc(a.client)} · ${esc(a.date)}</div><div class="small">${esc(a.work)} · ${esc(a.status||'PREVU')}</div>${a.partsNeeded?`<p>📦 ${esc(a.partsList||'Liste non renseignée')}</p>`:''}<div class="row">${actions}</div></div>`}
+function renderDay(){let info=dayInfo(selected);$('#dayTitle').textContent=fmt(selected);$('#capacity').textContent=info.open?`${info.count}/${info.cap} places`:info.c?`Fermé : ${info.c.name}`:'Atelier fermé';let arr=appointments.filter(a=>a.date===selected);$('#dayItems').innerHTML=arr.length?arr.map(a=>apptCard(a,'planning')).join(''):'<p class="muted">Aucun rendez-vous.</p>';$('#newAppt').disabled=!info.open||info.count>=info.cap;bindApptActions()}
+function bindApptActions(){$$('[data-editappt]').forEach(b=>b.onclick=()=>openAppointment(b.dataset.editappt));$$('[data-recheck]').forEach(b=>b.onclick=async()=>{let a=appointments.find(x=>x.id===b.dataset.recheck);if(!a||!a.partsOK||!confirm('Repasser ce dossier en PIÈCES À CONTRÔLER ?'))return;await updateDoc(doc(db,'appointments',a.id),{partsOK:false,updatedAt:serverTimestamp()}).catch(e=>alert(e.message))})}
+function renderParts(){let arr=appointments.filter(a=>a.partsNeeded).sort((a,b)=>(a.date||'').localeCompare(b.date||''));let pending=arr.filter(a=>!a.partsOK);$('#pendingCount').textContent=pending.length+' à vérifier';$('#partsList').innerHTML=(partsAll?arr:pending).map(a=>apptCard(a,'parts')).join('')||'<p class="muted">Aucun dossier à traiter.</p>';$$('[data-ok]').forEach(b=>b.onclick=async()=>{let a=appointments.find(x=>x.id===b.dataset.ok);if(!a||a.partsOK||!a.partsNeeded)return;try{await updateDoc(doc(db,'appointments',a.id),{partsOK:true,updatedAt:serverTimestamp()})}catch(e){alert('Validation impossible : '+e.message)}})}
+$('#filterPending').onclick=()=>{partsAll=false;renderParts()};$('#filterAll').onclick=()=>{partsAll=true;renderParts()};
+function renderClients(){let q=$('#searchClient').value.toLowerCase(),arr=clients.filter(c=>[c.name,c.phone,c.plate,c.brand,c.model].join(' ').toLowerCase().includes(q)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));$('#clientList').innerHTML=arr.map(c=>`<div class="entry"><strong>${esc(c.plate)} · ${esc(c.brand||'')} ${esc(c.model||'')}</strong><div>${esc(c.name)} · ${esc(c.phone||'')}</div><button class="secondary" data-editclient="${esc(c.id)}">Modifier la fiche</button></div>`).join('')||'<p class="muted">Aucune fiche.</p>';$$('[data-editclient]').forEach(b=>b.onclick=()=>openClient(b.dataset.editclient))}
+$('#searchClient').oninput=renderClients;$('#newClient').onclick=()=>openClient();
+function renderSettings(){['capMon','capTue'].forEach(k=>$('#'+k).value=settings[k]);['monOn','tueOn'].forEach(k=>$('#'+k).checked=!!settings[k]);$('#closures').innerHTML=(settings.holidays||[]).map((c,i)=>`<div class="entry">${esc(c.name)} · ${esc(c.start)} → ${esc(c.end)} <button class="danger" data-delclosure="${i}">×</button></div>`).join('');$$('[data-delclosure]').forEach(b=>b.onclick=async()=>{if(!confirm('Supprimer cette fermeture ?'))return;let holidays=[...(settings.holidays||[])];holidays.splice(+b.dataset.delclosure,1);await updateDoc(doc(db,'config','atelier'),{holidays})});$('#workList').innerHTML=(settings.works||[]).map((w,i)=>`<div class="row">${esc(w)} <button class="danger" data-delwork="${i}">×</button></div>`).join('');$$('[data-delwork]').forEach(b=>b.onclick=async()=>{let works=[...settings.works];works.splice(+b.dataset.delwork,1);await setDoc(doc(db,'config','atelier'),{...settings,works})})}
+$('#saveSettings').onclick=async()=>{try{await setDoc(doc(db,'config','atelier'),{...settings,capMon:Math.max(1,+$('#capMon').value||1),capTue:Math.max(1,+$('#capTue').value||1),monOn:$('#monOn').checked,tueOn:$('#tueOn').checked});alert('Paramètres enregistrés')}catch(e){alert(e.message)}};
+$('#addClosure').onclick=async()=>{let start=$('#closedFrom').value,end=$('#closedTo').value,name=$('#closedReason').value.trim()||'Fermeture';if(!start||!end||end<start)return alert('Dates invalides');await setDoc(doc(db,'config','atelier'),{...settings,holidays:[...(settings.holidays||[]),{start,end,name,type:'custom'}]}).catch(e=>alert(e.message))};
+$('#addWork').onclick=async()=>{let w=$('#newWork').value.trim();if(w&&!settings.works.includes(w))await setDoc(doc(db,'config','atelier'),{...settings,works:[...settings.works,w]}).catch(e=>alert(e.message))};
+function renderUsers(){if(role!=='admin')return;$('#usersList').innerHTML=users.sort((a,b)=>a.id.localeCompare(b.id)).map(u=>`<div class="entry"><strong>${esc(u.id)}</strong><span>${esc(u.role)} · ${u.enabled===false?'désactivé':'actif'}</span><div class="row"><button class="secondary" data-role="${esc(u.id)}">Changer rôle</button><button class="danger" data-removeuser="${esc(u.id)}">Révoquer</button></div></div>`).join('');$$('[data-role]').forEach(b=>b.onclick=async()=>{let r=prompt('Nouveau rôle : admin, teacher ou parts');if(!['admin','teacher','parts'].includes(r))return;await updateDoc(doc(db,'users',b.dataset.role),{role:r}).catch(e=>alert(e.message))});$$('[data-removeuser]').forEach(b=>b.onclick=async()=>{if(!confirm('Révoquer cet accès ?'))return;await updateDoc(doc(db,'users',b.dataset.removeuser),{enabled:false}).catch(e=>alert(e.message))})}
+$('#addUser').onclick=async()=>{let email=$('#userEmail').value.trim().toLowerCase(),r=$('#userRole').value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return alert('Adresse invalide');if(email===ADMIN_EMAIL)return alert('Compte administrateur principal déjà autorisé');try{await setDoc(doc(db,'users',email),{email,role:r,enabled:true});$('#userEmail').value='';alert('Compte autorisé')}catch(e){alert(e.message)}};
+function openModal(title,fields,type,id){modalType=type;editing=id;$('#modalTitle').textContent=title;$('#formFields').innerHTML=fields;$('#deleteEntry').classList.toggle('hidden',!id);$('#modal').classList.add('open')}
+function field(k,label,val='',type='text',required=false){return `<div class="field"><label>${label}</label><input name="${k}" type="${type}" value="${esc(val)}" ${required?'required':''}></div>`}
+function openClient(id){let c=clients.find(x=>x.id===id)||{};openModal(id?'Modifier la fiche':'Nouvelle fiche',field('name','Nom et prénom du client',c.name,'text',true)+field('phone','Téléphone',c.phone,'tel')+field('address','Adresse',c.address)+field('plate','Immatriculation',c.plate,'text',true)+field('brand','Marque',c.brand)+field('model','Modèle',c.model,'text',true)+field('vin','VIN (17 caractères)',c.vin),'client',id)}
+function openAppointment(id){let a=appointments.find(x=>x.id===id)||{},c=clients.find(x=>x.plate===a.plate);let options=clients.map(x=>`<option value="${esc(x.id)}" ${x.id===a.clientId?'selected':''}>${esc(x.plate)} · ${esc(x.name)} · ${esc(x.brand||'')} ${esc(x.model||'')}</option>`).join('');let f=`<div class="field"><label>Véhicule / Client</label><select name="clientId" required><option value="">Choisir une fiche</option>${options}</select></div>`+field('date','Date du rendez-vous',a.date||selected,'date',true)+field('work','Travaux prévus',a.work,'text',true)+`<div class="field"><label>Travaux fréquents</label><div class="chips">${(settings.works||[]).map(w=>`<button type="button" class="chip" data-work="${esc(w)}">${esc(w)}</button>`).join('')}</div></div>`+`<div class="field"><label>Durée</label><select name="duration">${[1,2,3,4,5].map(n=>`<option value="${n}" ${+a.duration===n?'selected':''}>${n} jour${n>1?'s':''}</option>`).join('')}</select></div>`+`<div class="field"><label>Statut</label><select name="status">${['PREVU','PRESENT','TERMINE'].map(v=>`<option ${a.status===v?'selected':''}>${v}</option>`).join('')}</select></div>`+`<label><input type="checkbox" name="partsNeeded" ${a.partsNeeded?'checked':''}> Pièces détachées nécessaires</label><div class="field"><label>Liste des pièces</label><textarea name="partsList">${esc(a.partsList||'')}</textarea></div>`;openModal(id?'Modifier le rendez-vous':'Nouveau rendez-vous',f,'appt',id);$$('[data-work]').forEach(b=>b.onclick=()=>{let t=$('#form [name=work]');t.value=t.value?t.value+' • '+b.dataset.work:b.dataset.work})}
+$('#newAppt').onclick=()=>openAppointment();$('#closeModal').onclick=()=>$('#modal').classList.remove('open');$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('open')};
+$('#form').onsubmit=async e=>{e.preventDefault();let fd=new FormData(e.target),obj=Object.fromEntries(fd.entries());try{if(modalType==='client'){obj.plate=obj.plate.trim().toUpperCase();if(obj.vin&&obj.vin.length!==17)return alert('Le VIN doit contenir 17 caractères');let id=editing||crypto.randomUUID();await setDoc(doc(db,'clients',id),{...obj,updatedAt:serverTimestamp()})}else{let c=clients.find(x=>x.id===obj.clientId);if(!c)return alert('Sélectionner une fiche véhicule');let existing=appointments.find(x=>x.id===editing);let info=dayInfo(obj.date);if(info.c||!((parse(obj.date).getDay()===1&&settings.monOn)||(parse(obj.date).getDay()===2&&settings.tueOn)))return alert('Rendez-vous interdit : jour fermé');if(!editing&&info.count>=info.cap)return alert('Capacité atteinte');if(editing&&obj.date!==existing.date&&info.count>=info.cap)return alert('Capacité atteinte');let needed=fd.has('partsNeeded');let partsList=needed?String(obj.partsList||'').trim():'';let partsOK=!!(existing?.partsNeeded&&existing?.partsOK&&needed&&existing.partsList===partsList);let id=editing||crypto.randomUUID();await setDoc(doc(db,'appointments',id),{date:obj.date,clientId:c.id,client:c.name,plate:c.plate,model:[c.brand,c.model].filter(Boolean).join(' '),work:obj.work,duration:+obj.duration,status:obj.status,partsNeeded:needed,partsList,partsOK,updatedAt:serverTimestamp()})}$('#modal').classList.remove('open')}catch(err){alert('Enregistrement impossible : '+err.message)}};
+$('#deleteEntry').onclick=async()=>{if(!editing||!confirm('Supprimer définitivement ?'))return;try{await deleteDoc(doc(db,modalType==='client'?'clients':'appointments',editing));$('#modal').classList.remove('open')}catch(e){alert(e.message)}};
+$('#prev').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()};$('#next').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()};
+$('#migrate').onclick=async()=>{if(!confirm('Importer les données historiques ? Sauvegardez d’abord vos données. Cette opération n’est à faire qu’une fois.'))return;let msg=$('#migrateMsg');try{let old=await getDoc(doc(db,'planning_atelier','donnees'));if(!old.exists())return msg.textContent='Aucune ancienne donnée trouvée.';let x=old.data();let current=await getDocs(collection(db,'appointments'));if(!current.empty)return msg.textContent='Migration annulée : de nouveaux rendez-vous existent déjà. Aucun écrasement.';let batch=writeBatch(db),known=new Map();let count=0;for(let v of (x.vehicles||[])){let key=(v.plate||'').trim().toUpperCase();if(!key)continue;let cid=known.get(key);if(!cid){cid=crypto.randomUUID();known.set(key,cid);batch.set(doc(db,'clients',cid),{name:v.client||'',plate:key,model:v.model||'',brand:'',phone:'',address:'',vin:''})}batch.set(doc(db,'appointments',String(v.id||crypto.randomUUID())),{...v,clientId:cid,partsNeeded:!!v.partsNeeded,partsOK:!!v.partsOK,partsList:v.partsList||''});count++}if(count>400)return msg.textContent='Plus de 400 RDV : contactez-moi pour une migration par lots.';batch.set(doc(db,'config','atelier'),{...defaults,...(x.settings||{})});await batch.commit();msg.textContent=`Import terminé : ${count} rendez-vous, ${known.size} fiches. L'ancien document est conservé.`}catch(e){msg.textContent='Échec : '+e.message}};
+function render(){if(!role)return;if(role!=='parts'){renderCalendar();renderDay();renderClients();if(role==='admin')renderSettings()}renderParts();if(role==='admin')renderUsers()}
+</script></body></html>
